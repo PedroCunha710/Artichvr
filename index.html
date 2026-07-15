@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-PT">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spotify Album Finder</title>
+    <meta
+      name="description"
+      content="Pesquisa artistas e explora a discografia completa através da Spotify Web API."
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <h1 class="logo">🎵 Album Finder</h1>
+      <form id="search-form" class="search-form" autocomplete="off">
+        <input
+          id="search-input"
+          type="search"
+          name="artist"
+          placeholder="Procurar artista..."
+          aria-label="Nome do artista"
+          required
+        />
+        <button type="submit">Procurar</button>
+      </form>
+    </header>
+
+    <main>
+      <p id="status" class="status" role="status" hidden></p>
+      <section id="artist-card" class="artist-card"></section>
+      <section id="albums-grid" class="albums-grid"></section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        Feito com a
+        <a href="https://developer.spotify.com/documentation/web-api" target="_blank" rel="noopener"
+          >Spotify Web API</a
+        >. Código aberto sob licença MIT.
+      </p>
+    </footer>
+
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
