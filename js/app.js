@@ -8,10 +8,12 @@ import {
   removeSavedAlbum,
 } from "./api.js";
 import { redirectToLogin, handleRedirectCallback, getUserAccessToken, isLoggedIn, logout } from "./auth.js";
+import { getSearchHistory, addToSearchHistory } from "./history.js";
 import {
   playIntroAnimation,
   onSearchSubmit,
   onSearchInput,
+  onSearchFocus,
   renderSuggestions,
   clearSuggestions,
   onSuggestionSelect,
@@ -21,6 +23,7 @@ import {
   getSortOrder,
   onLoginClick,
   onLogoutClick,
+  onHistoryClick,
   onSaveAlbumClick,
   setAlbumSaved,
   showLoggedIn,
@@ -51,6 +54,8 @@ onSearchInput(async (query) => {
   }
 });
 
+onSearchFocus(() => renderSuggestions(getSearchHistory(), "Recent searches"));
+
 async function runSearch(resolveArtist, notFoundMessage) {
   if (isSearching) return;
   isSearching = true;
@@ -70,6 +75,7 @@ async function runSearch(resolveArtist, notFoundMessage) {
     const albums = await getArtistAlbums(artist.id);
     await waitForMinimumLoading(startedAt);
 
+    addToSearchHistory(artist);
     currentAlbums = albums.map((album) => ({ ...album, isSaved: false }));
     renderArtist(artist);
     renderAlbums(applyAlbumsView());
@@ -93,6 +99,8 @@ onLogoutClick(() => {
   logout();
   showLoggedOut();
 });
+
+onHistoryClick(() => renderSuggestions(getSearchHistory(), "Recent searches"));
 
 onSaveAlbumClick(async (albumId, button) => {
   const token = await getUserAccessToken();

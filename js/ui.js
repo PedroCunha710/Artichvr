@@ -12,6 +12,7 @@ const els = {
   statusText: document.getElementById("status-text"),
   loader: document.getElementById("loader"),
   loginButton: document.getElementById("login-button"),
+  historyButton: document.getElementById("history-button"),
   logoutButton: document.getElementById("logout-button"),
   userChip: document.getElementById("user-chip"),
   userMenuButton: document.getElementById("user-menu-button"),
@@ -90,26 +91,35 @@ export function onSearchInput(handler) {
   });
 }
 
-export function renderSuggestions(artists) {
+export function onSearchFocus(handler) {
+  els.input.addEventListener("focus", () => {
+    if (els.input.value.trim() === "") handler();
+  });
+}
+
+export function renderSuggestions(artists, heading) {
   if (artists.length === 0) {
     clearSuggestions();
     return;
   }
 
   currentSuggestions = artists;
-  els.suggestions.innerHTML = artists
-    .map((artist, index) => {
-      const photo = artist.images[artist.images.length - 1]?.url ?? "";
-      return `
-        <li>
-          <button type="button" class="search-suggestion" data-index="${index}">
-            <img src="${photo}" alt="" />
-            <span>${escapeHtml(artist.name)}</span>
-          </button>
-        </li>
-      `;
-    })
-    .join("");
+  const headingHtml = heading ? `<li class="search-suggestions-heading">${escapeHtml(heading)}</li>` : "";
+  els.suggestions.innerHTML =
+    headingHtml +
+    artists
+      .map((artist, index) => {
+        const photo = artist.images[artist.images.length - 1]?.url ?? "";
+        return `
+          <li>
+            <button type="button" class="search-suggestion" data-index="${index}">
+              <img src="${photo}" alt="" />
+              <span>${escapeHtml(artist.name)}</span>
+            </button>
+          </li>
+        `;
+      })
+      .join("");
 
   els.suggestions.hidden = false;
   els.input.setAttribute("aria-expanded", "true");
@@ -175,6 +185,16 @@ export function onLoginClick(handler) {
 
 export function onLogoutClick(handler) {
   els.logoutButton.addEventListener("click", handler);
+}
+
+export function onHistoryClick(handler) {
+  els.historyButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeUserMenu();
+    els.input.scrollIntoView({ behavior: "smooth", block: "center" });
+    els.input.focus();
+    handler();
+  });
 }
 
 export function onSaveAlbumClick(handler) {
@@ -342,13 +362,13 @@ function playVinylLoader() {
   // svgOrigin (not transformOrigin) pins the pivot to a point in the SVG's own
   // viewBox coordinates - GSAP otherwise resolves px origins against the
   // rotating element's own tiny bounding box, sending it wildly off-center.
-  gsap.set(".tonearm", { rotation: -18, svgOrigin: "114 20" });
-  gsap.set(".vinyl-disc", { rotation: 0, svgOrigin: "55 65" });
+  gsap.set(".tonearm", { rotation: -18, svgOrigin: "129 20" });
+  gsap.set(".vinyl-disc", { rotation: 0, svgOrigin: "70 65" });
 
   vinylTimeline = gsap
     .timeline()
-    .to(".tonearm", { rotation: 0, duration: 0.7, ease: "power2.out", svgOrigin: "114 20" })
-    .to(".vinyl-disc", { rotation: "+=360", duration: 1.1, ease: "none", repeat: -1, svgOrigin: "55 65" }, 0.7);
+    .to(".tonearm", { rotation: 0, duration: 0.7, ease: "power2.out", svgOrigin: "129 20" })
+    .to(".vinyl-disc", { rotation: "+=360", duration: 1.1, ease: "none", repeat: -1, svgOrigin: "70 65" }, 0.7);
 }
 
 function stopVinylLoader() {
