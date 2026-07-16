@@ -32,8 +32,11 @@ import {
 const MIN_LOADING_MS = 2500;
 
 let currentAlbums = [];
+let isSearching = false;
 
 onSearchSubmit(async (query) => {
+  if (isSearching) return;
+  isSearching = true;
   showLoading();
   const startedAt = Date.now();
 
@@ -58,6 +61,8 @@ onSearchSubmit(async (query) => {
   } catch (error) {
     await waitForMinimumLoading(startedAt);
     showError(error.message || "Something went wrong.");
+  } finally {
+    isSearching = false;
   }
 });
 
@@ -109,7 +114,7 @@ async function initAuth() {
 
   try {
     const profile = await getCurrentUserProfile(token);
-    showLoggedIn(profile.display_name || profile.id);
+    showLoggedIn(profile.display_name || profile.id, profile.images?.[0]?.url);
   } catch {
     showLoggedOut();
   }

@@ -29,8 +29,22 @@
       <div class="auth-area">
         <button id="login-button" type="button" class="login-button">Log in with Spotify</button>
         <div id="user-chip" class="user-chip" hidden>
-          <span id="user-name"></span>
-          <button id="logout-button" type="button" class="logout-button">Log out</button>
+          <button
+            id="user-menu-button"
+            type="button"
+            class="user-menu-button"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            <span class="user-avatar">
+              <img id="user-avatar-img" alt="" hidden />
+              <span id="user-avatar-fallback" class="user-avatar-fallback"></span>
+            </span>
+            <span id="user-name" class="user-name"></span>
+          </button>
+          <div id="user-menu" class="user-menu" hidden>
+            <button id="logout-button" type="button" class="logout-button">Log out</button>
+          </div>
         </div>
       </div>
     </header>
@@ -90,12 +104,11 @@
             <circle cx="55" cy="65" r="34" fill="none" stroke="#2a2a2a" />
             <circle cx="55" cy="65" r="24" fill="none" stroke="#2a2a2a" />
             <circle cx="55" cy="65" r="15" fill="none" stroke="#2a2a2a" />
+            <circle cx="55" cy="65" r="9" fill="#1db954" />
+            <circle cx="55" cy="65" r="2.5" fill="#121212" />
           </g>
           <g class="vinyl-disc">
-            <line x1="55" y1="65" x2="94" y2="65" stroke="rgba(255,255,255,0.14)" stroke-width="7" stroke-linecap="round" />
-            <circle cx="55" cy="65" r="9" fill="#1db954" />
             <circle cx="60.5" cy="60.5" r="1.4" fill="#0f3d20" />
-            <circle cx="55" cy="65" r="2.5" fill="#121212" />
           </g>
           <g class="tonearm">
             <line x1="114" y1="20" x2="79" y2="41" stroke="#c9c9c9" stroke-width="3" stroke-linecap="round" />

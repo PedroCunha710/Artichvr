@@ -30,8 +30,13 @@ async function getAccessToken() {
   return accessToken;
 }
 
-const MAX_RATE_LIMIT_RETRIES = 2;
+const MAX_RATE_LIMIT_RETRIES = 4;
 const RATE_LIMIT_BACKOFF_MS = 3000;
+const PAGINATION_DELAY_MS = 300;
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function spotifyFetch(url, attempt = 0) {
   const token = await getAccessToken();
@@ -43,7 +48,7 @@ async function spotifyFetch(url, attempt = 0) {
     // Spotify's 429 response includes a Retry-After header, but it isn't in
     // Access-Control-Expose-Headers, so cross-origin fetch can't read it from
     // the browser. Back off with a fixed, increasing delay instead.
-    await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_BACKOFF_MS * (attempt + 1)));
+    await wait(RATE_LIMIT_BACKOFF_MS * (attempt + 1));
     return spotifyFetch(url, attempt + 1);
   }
 
@@ -72,6 +77,9 @@ export async function getArtistAlbums(artistId) {
     const data = await spotifyFetch(url);
     albums.push(...data.items);
     url = data.next;
+    // Space out pagination requests so a big discography doesn't burst past
+    // Spotify's rate limit before a single 429 ever comes back.
+    if (url) await wait(PAGINATION_DELAY_MS);
   }
 
   return dedupeAlbums(albums);
