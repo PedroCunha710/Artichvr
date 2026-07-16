@@ -18,7 +18,7 @@ Spotify Album Finder — a static, front-end-only web app to search an artist an
 
 ```
 index.html
-css/style.css      # dark theme, Spotify green accents (#121212 / #1db954)
+css/style.css      # dark theme by default, Spotify green accents (#121212 / #1db954), light theme via `[data-theme="light"]`
 js/api.js          # all Spotify API calls (app-level + user-level), auth token handling
 js/auth.js         # user login: PKCE Authorization Code flow, token storage/refresh
 js/history.js      # recent-searches list, persisted to localStorage
@@ -51,7 +51,13 @@ Pivot points for the SVG loader/error icons (tonearm, vinyl disc, error needle) 
 
 ## Hero background photos
 
-`.hero-bg-slide` divs in `index.html` hotlink directly to Wikimedia Commons image URLs (CC BY 2.0, not CC0 — attribution is required and lives in the footer's `.photo-credits` line; don't remove it if you swap photos, or update it to match). No API key or backend needed since these are just `background-image` on plain `<div>`s. `.hero-bg`/`.hero-overlay` are `position: fixed` covering the full viewport (not just the `.hero` section) so the photo shows through `main`/the footer too, since neither has its own background color — only the `.site-header` bar stays opaque on top of it. `.hero-overlay` is the dark gradient that keeps text readable regardless of which photo is showing; `collapseHero()` fades the whole background+overlay out once results appear, rather than trying to show a cropped sliver of it behind the compact search bar.
+`.hero-bg-slide` divs in `index.html` hotlink directly to Wikimedia Commons image URLs (CC BY 2.0, not CC0 — attribution is required and lives in the footer's `.photo-credits` line; don't remove it if you swap photos, or update it to match). No API key or backend needed since these are just `background-image` on plain `<div>`s. `.hero-bg`/`.hero-overlay` are `position: fixed` covering the full viewport (not just the `.hero` section) so the photo shows through `main`/the footer too, since neither has its own background color — only the `.site-header` bar stays opaque on top of it. `.hero-overlay` is the dark gradient that keeps text readable regardless of which photo is showing; `collapseHero()` fades the whole background+overlay out once results appear, rather than trying to show a cropped sliver of it behind the compact search bar. `.hero-title`/`.hero-subtitle` are hardcoded to light colors rather than `var(--text)`/`var(--text-muted)` — they always sit on the dark photo overlay regardless of the light/dark theme toggle, so tying them to the theme vars would make them unreadable in light mode.
+
+## Theme
+
+Colors live as CSS custom properties on `:root` (dark, the default) with overrides under `:root[data-theme="light"]` — `css/style.css` §1. The `data-theme` attribute is set on `<html>`, not `<body>`, so it's available before the rest of the DOM parses. An inline, non-module `<script>` in `index.html`'s `<head>` (before the stylesheet `<link>`) reads `localStorage.artichvr_theme`, falling back to `prefers-color-scheme`, and sets the attribute synchronously — this has to run before first paint to avoid a flash of the wrong theme, which a deferred `type="module"` script can't guarantee. The toggle button's click handler (in `ui.js`) just flips the attribute and re-persists it; it duplicates the storage key rather than importing it from a shared module, since the inline head script can't import anything.
+
+The SVG turntable/vinyl icons (header logo, loader, error state) keep their hardcoded dark fills in both themes — they're meant to look like an actual black vinyl record, not UI chrome that should invert.
 
 ## Running locally
 
@@ -65,4 +71,4 @@ Needs to be served over HTTP (ES modules and the Spotify token request don't wor
 
 ## Roadmap (not yet built)
 
-Light/dark theme toggle. Sort/filter by album type, "save to your Spotify library" (login required), search-as-you-type suggestions, and search history are already built.
+Nothing outstanding right now. Sort/filter by album type, "save to your Spotify library" (login required), search-as-you-type suggestions, search history, and the light/dark theme toggle are all already built.
