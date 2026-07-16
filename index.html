@@ -51,7 +51,21 @@
 
     <main>
       <div id="loader" class="loader" hidden>
-        <div class="vinyl" aria-hidden="true"></div>
+        <svg class="turntable" viewBox="0 0 140 120" width="140" height="120" aria-hidden="true">
+          <g class="vinyl-disc">
+            <circle cx="55" cy="65" r="45" fill="#181818" stroke="#2f2f2f" />
+            <circle cx="55" cy="65" r="34" fill="none" stroke="#2a2a2a" />
+            <circle cx="55" cy="65" r="24" fill="none" stroke="#2a2a2a" />
+            <circle cx="55" cy="65" r="15" fill="none" stroke="#2a2a2a" />
+            <circle cx="55" cy="65" r="9" fill="#1db954" />
+            <circle cx="55" cy="65" r="2.5" fill="#121212" />
+          </g>
+          <g class="tonearm">
+            <line x1="114" y1="20" x2="79" y2="41" stroke="#c9c9c9" stroke-width="3" stroke-linecap="round" />
+            <circle cx="114" cy="20" r="6" fill="#3a3a3a" stroke="#555" />
+            <circle cx="79" cy="41" r="4" fill="#8f8f8f" />
+          </g>
+        </svg>
         <p>Searching...</p>
       </div>
       <p id="status" class="status" role="status" hidden></p>
