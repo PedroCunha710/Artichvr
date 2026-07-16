@@ -1,5 +1,6 @@
 import {
   searchArtist,
+  searchArtists,
   getArtistAlbums,
   getCurrentUserProfile,
   checkAlbumsSaved,
@@ -7,15 +8,22 @@ import {
   removeSavedAlbum,
 } from "./api.js";
 import { redirectToLogin, handleRedirectCallback, getUserAccessToken, isLoggedIn, logout } from "./auth.js";
+import { getSearchHistory, addToSearchHistory } from "./history.js";
 import {
   playIntroAnimation,
   onSearchSubmit,
+  onSearchInput,
+  onSearchFocus,
+  renderSuggestions,
+  clearSuggestions,
+  onSuggestionSelect,
   onFilterChange,
   onSortChange,
   getActiveTypes,
   getSortOrder,
   onLoginClick,
   onLogoutClick,
+  onHistoryClick,
   onSaveAlbumClick,
   setAlbumSaved,
   showLoggedIn,
@@ -29,29 +37,45 @@ import {
 
 // Real Spotify responses can come back in well under a second, which barely
 // shows the turntable animation - hold the loading state for a bit so it reads.
-const MIN_LOADING_MS = 2500;
+const MIN_LOADING_MS = 1500;
 
 let currentAlbums = [];
 let isSearching = false;
 
-onSearchSubmit(async (query) => {
+onSearchSubmit((query) => runSearch(() => searchArtist(query), `No artist found for "${query}".`));
+
+onSuggestionSelect((artist) => runSearch(() => Promise.resolve(artist)));
+
+onSearchInput(async (query) => {
+  try {
+    renderSuggestions(await searchArtists(query));
+  } catch {
+    clearSuggestions();
+  }
+});
+
+onSearchFocus(() => renderSuggestions(getSearchHistory(), "Recent searches"));
+
+async function runSearch(resolveArtist, notFoundMessage) {
   if (isSearching) return;
   isSearching = true;
+  clearSuggestions();
   showLoading();
   const startedAt = Date.now();
 
   try {
-    const artist = await searchArtist(query);
+    const artist = await resolveArtist();
 
     if (!artist) {
       await waitForMinimumLoading(startedAt);
-      showError(`No artist found for "${query}".`);
+      showError(notFoundMessage || "Artist not found.");
       return;
     }
 
     const albums = await getArtistAlbums(artist.id);
     await waitForMinimumLoading(startedAt);
 
+    addToSearchHistory(artist);
     currentAlbums = albums.map((album) => ({ ...album, isSaved: false }));
     renderArtist(artist);
     renderAlbums(applyAlbumsView());
@@ -64,7 +88,7 @@ onSearchSubmit(async (query) => {
   } finally {
     isSearching = false;
   }
-});
+}
 
 onFilterChange(() => renderAlbums(applyAlbumsView()));
 onSortChange(() => renderAlbums(applyAlbumsView()));
@@ -75,6 +99,8 @@ onLogoutClick(() => {
   logout();
   showLoggedOut();
 });
+
+onHistoryClick(() => renderSuggestions(getSearchHistory(), "Recent searches"));
 
 onSaveAlbumClick(async (albumId, button) => {
   const token = await getUserAccessToken();

@@ -62,10 +62,15 @@ async function spotifyFetch(url, attempt = 0) {
   return response.json();
 }
 
-export async function searchArtist(name) {
-  const url = `${BASE_URL}/search?q=${encodeURIComponent(name)}&type=artist&limit=1`;
+export async function searchArtists(name, limit = 6) {
+  const url = `${BASE_URL}/search?q=${encodeURIComponent(name)}&type=artist&limit=${limit}`;
   const data = await spotifyFetch(url);
-  return data.artists.items[0] ?? null;
+  return data.artists.items;
+}
+
+export async function searchArtist(name) {
+  const results = await searchArtists(name, 1);
+  return results[0] ?? null;
 }
 
 export async function getArtistAlbums(artistId) {

@@ -1,6 +1,7 @@
 const els = {
   form: document.getElementById("search-form"),
   input: document.getElementById("search-input"),
+  suggestions: document.getElementById("search-suggestions"),
   artistCard: document.getElementById("artist-card"),
   albumsToolbar: document.getElementById("albums-toolbar"),
   albumsGrid: document.getElementById("albums-grid"),
@@ -11,6 +12,7 @@ const els = {
   statusText: document.getElementById("status-text"),
   loader: document.getElementById("loader"),
   loginButton: document.getElementById("login-button"),
+  historyButton: document.getElementById("history-button"),
   logoutButton: document.getElementById("logout-button"),
   userChip: document.getElementById("user-chip"),
   userMenuButton: document.getElementById("user-menu-button"),
@@ -64,10 +66,95 @@ function playHeroBackgroundCarousel() {
 export function onSearchSubmit(handler) {
   els.form.addEventListener("submit", (event) => {
     event.preventDefault();
+    clearSuggestions();
     const query = els.input.value.trim();
     if (query) handler(query);
   });
 }
+
+const SUGGESTION_DEBOUNCE_MS = 400;
+const SUGGESTION_MIN_LENGTH = 2;
+let suggestionDebounceTimer = null;
+let currentSuggestions = [];
+
+export function onSearchInput(handler) {
+  els.input.addEventListener("input", () => {
+    clearTimeout(suggestionDebounceTimer);
+    const query = els.input.value.trim();
+
+    if (query.length < SUGGESTION_MIN_LENGTH) {
+      clearSuggestions();
+      return;
+    }
+
+    suggestionDebounceTimer = setTimeout(() => handler(query), SUGGESTION_DEBOUNCE_MS);
+  });
+}
+
+export function onSearchFocus(handler) {
+  els.input.addEventListener("focus", () => {
+    if (els.input.value.trim() === "") handler();
+  });
+}
+
+export function renderSuggestions(artists, heading) {
+  if (artists.length === 0) {
+    clearSuggestions();
+    return;
+  }
+
+  currentSuggestions = artists;
+  const headingHtml = heading ? `<li class="search-suggestions-heading">${escapeHtml(heading)}</li>` : "";
+  els.suggestions.innerHTML =
+    headingHtml +
+    artists
+      .map((artist, index) => {
+        const photo = artist.images[artist.images.length - 1]?.url ?? "";
+        return `
+          <li>
+            <button type="button" class="search-suggestion" data-index="${index}">
+              <img src="${photo}" alt="" />
+              <span>${escapeHtml(artist.name)}</span>
+            </button>
+          </li>
+        `;
+      })
+      .join("");
+
+  els.suggestions.hidden = false;
+  els.input.setAttribute("aria-expanded", "true");
+}
+
+export function clearSuggestions() {
+  currentSuggestions = [];
+  els.suggestions.hidden = true;
+  els.suggestions.innerHTML = "";
+  els.input.setAttribute("aria-expanded", "false");
+}
+
+export function onSuggestionSelect(handler) {
+  els.suggestions.addEventListener("click", (event) => {
+    const button = event.target.closest(".search-suggestion");
+    if (!button) return;
+
+    const artist = currentSuggestions[Number(button.dataset.index)];
+    if (!artist) return;
+
+    els.input.value = artist.name;
+    clearSuggestions();
+    handler(artist);
+  });
+}
+
+document.addEventListener("click", (event) => {
+  if (!els.suggestions.hidden && !event.target.closest(".search-input-wrap")) {
+    clearSuggestions();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") clearSuggestions();
+});
 
 export function onFilterChange(handler) {
   els.filterPills.forEach((pill) => {
@@ -98,6 +185,16 @@ export function onLoginClick(handler) {
 
 export function onLogoutClick(handler) {
   els.logoutButton.addEventListener("click", handler);
+}
+
+export function onHistoryClick(handler) {
+  els.historyButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeUserMenu();
+    els.input.scrollIntoView({ behavior: "smooth", block: "center" });
+    els.input.focus();
+    handler();
+  });
 }
 
 export function onSaveAlbumClick(handler) {
@@ -265,13 +362,13 @@ function playVinylLoader() {
   // svgOrigin (not transformOrigin) pins the pivot to a point in the SVG's own
   // viewBox coordinates - GSAP otherwise resolves px origins against the
   // rotating element's own tiny bounding box, sending it wildly off-center.
-  gsap.set(".tonearm", { rotation: -18, svgOrigin: "114 20" });
-  gsap.set(".vinyl-disc", { rotation: 0, svgOrigin: "55 65" });
+  gsap.set(".tonearm", { rotation: -18, svgOrigin: "129 20" });
+  gsap.set(".vinyl-disc", { rotation: 0, svgOrigin: "70 65" });
 
   vinylTimeline = gsap
     .timeline()
-    .to(".tonearm", { rotation: 0, duration: 0.7, ease: "power2.out", svgOrigin: "114 20" })
-    .to(".vinyl-disc", { rotation: "+=360", duration: 1.1, ease: "none", repeat: -1, svgOrigin: "55 65" }, 0.7);
+    .to(".tonearm", { rotation: 0, duration: 0.7, ease: "power2.out", svgOrigin: "129 20" })
+    .to(".vinyl-disc", { rotation: "+=360", duration: 1.1, ease: "none", repeat: -1, svgOrigin: "70 65" }, 0.7);
 }
 
 function stopVinylLoader() {

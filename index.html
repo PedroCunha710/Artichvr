@@ -43,7 +43,8 @@
             <span id="user-name" class="user-name"></span>
           </button>
           <div id="user-menu" class="user-menu" hidden>
-            <button id="logout-button" type="button" class="logout-button">Log out</button>
+            <button id="history-button" type="button" class="menu-item">History</button>
+            <button id="logout-button" type="button" class="menu-item">Log out</button>
           </div>
         </div>
       </div>
@@ -84,14 +85,20 @@
       </div>
 
       <form id="search-form" class="search-form" autocomplete="off">
-        <input
-          id="search-input"
-          type="search"
-          name="artist"
-          placeholder="Search for an artist..."
-          aria-label="Artist name"
-          required
-        />
+        <div class="search-input-wrap">
+          <input
+            id="search-input"
+            type="search"
+            name="artist"
+            placeholder="Search for an artist..."
+            aria-label="Artist name"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-controls="search-suggestions"
+            required
+          />
+          <ul id="search-suggestions" class="search-suggestions" hidden></ul>
+        </div>
         <button type="submit">Search</button>
       </form>
     </section>
@@ -100,20 +107,20 @@
       <div id="loader" class="loader" hidden>
         <svg class="turntable" viewBox="0 0 140 120" width="140" height="120" aria-hidden="true">
           <g class="vinyl-body">
-            <circle cx="55" cy="65" r="45" fill="#181818" stroke="#2f2f2f" />
-            <circle cx="55" cy="65" r="34" fill="none" stroke="#2a2a2a" />
-            <circle cx="55" cy="65" r="24" fill="none" stroke="#2a2a2a" />
-            <circle cx="55" cy="65" r="15" fill="none" stroke="#2a2a2a" />
-            <circle cx="55" cy="65" r="9" fill="#1db954" />
-            <circle cx="55" cy="65" r="2.5" fill="#121212" />
+            <circle cx="70" cy="65" r="45" fill="#181818" stroke="#2f2f2f" />
+            <circle cx="70" cy="65" r="34" fill="none" stroke="#2a2a2a" />
+            <circle cx="70" cy="65" r="24" fill="none" stroke="#2a2a2a" />
+            <circle cx="70" cy="65" r="15" fill="none" stroke="#2a2a2a" />
+            <circle cx="70" cy="65" r="9" fill="#1db954" />
+            <circle cx="70" cy="65" r="2.5" fill="#121212" />
           </g>
           <g class="vinyl-disc">
-            <circle cx="60.5" cy="60.5" r="1.4" fill="#0f3d20" />
+            <circle cx="75.5" cy="60.5" r="1.4" fill="#0f3d20" />
           </g>
           <g class="tonearm">
-            <line x1="114" y1="20" x2="79" y2="41" stroke="#c9c9c9" stroke-width="3" stroke-linecap="round" />
-            <circle cx="114" cy="20" r="6" fill="#3a3a3a" stroke="#555" />
-            <circle cx="79" cy="41" r="4" fill="#8f8f8f" />
+            <line x1="129" y1="20" x2="94" y2="41" stroke="#c9c9c9" stroke-width="3" stroke-linecap="round" />
+            <circle cx="129" cy="20" r="6" fill="#3a3a3a" stroke="#555" />
+            <circle cx="94" cy="41" r="4" fill="#8f8f8f" />
           </g>
         </svg>
         <p>Searching...</p>
