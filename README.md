@@ -1,4 +1,4 @@
-# 🎵 Spotify Album Finder
+# 🎵 Artichvr
 
 Open source web app to search any artist and browse their full discography via the Spotify Web API.
 
@@ -37,7 +37,7 @@ Personal project built to demonstrate REST API consumption, DOM manipulation, an
 ## Project structure
 
 ```
-spotify-album-finder/
+Artichvr/
 │
 ├── index.html
 ├── css/
@@ -58,8 +58,8 @@ spotify-album-finder/
 This project has no build step, but ES modules and the Spotify token request only work when served over HTTP (don't open `index.html` directly with `file://`).
 
 ```bash
-git clone https://github.com/<your-username>/spotify-album-finder.git
-cd spotify-album-finder
+git clone https://github.com/PedroCunha710/Artichvr.git
+cd Artichvr
 npx serve
 ```
 
