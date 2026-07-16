@@ -1,5 +1,6 @@
 import {
   searchArtist,
+  searchArtists,
   getArtistAlbums,
   getCurrentUserProfile,
   checkAlbumsSaved,
@@ -10,6 +11,10 @@ import { redirectToLogin, handleRedirectCallback, getUserAccessToken, isLoggedIn
 import {
   playIntroAnimation,
   onSearchSubmit,
+  onSearchInput,
+  renderSuggestions,
+  clearSuggestions,
+  onSuggestionSelect,
   onFilterChange,
   onSortChange,
   getActiveTypes,
@@ -29,23 +34,36 @@ import {
 
 // Real Spotify responses can come back in well under a second, which barely
 // shows the turntable animation - hold the loading state for a bit so it reads.
-const MIN_LOADING_MS = 2500;
+const MIN_LOADING_MS = 1500;
 
 let currentAlbums = [];
 let isSearching = false;
 
-onSearchSubmit(async (query) => {
+onSearchSubmit((query) => runSearch(() => searchArtist(query), `No artist found for "${query}".`));
+
+onSuggestionSelect((artist) => runSearch(() => Promise.resolve(artist)));
+
+onSearchInput(async (query) => {
+  try {
+    renderSuggestions(await searchArtists(query));
+  } catch {
+    clearSuggestions();
+  }
+});
+
+async function runSearch(resolveArtist, notFoundMessage) {
   if (isSearching) return;
   isSearching = true;
+  clearSuggestions();
   showLoading();
   const startedAt = Date.now();
 
   try {
-    const artist = await searchArtist(query);
+    const artist = await resolveArtist();
 
     if (!artist) {
       await waitForMinimumLoading(startedAt);
-      showError(`No artist found for "${query}".`);
+      showError(notFoundMessage || "Artist not found.");
       return;
     }
 
@@ -64,7 +82,7 @@ onSearchSubmit(async (query) => {
   } finally {
     isSearching = false;
   }
-});
+}
 
 onFilterChange(() => renderAlbums(applyAlbumsView()));
 onSortChange(() => renderAlbums(applyAlbumsView()));

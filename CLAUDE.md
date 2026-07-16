@@ -64,4 +64,4 @@ Needs to be served over HTTP (ES modules and the Spotify token request don't wor
 
 ## Roadmap (not yet built)
 
-Real-time search-as-you-type, search history (localStorage), light/dark theme toggle. Sort/filter by album type and "save to your Spotify library" (login required) are already built.
+Search history (localStorage), light/dark theme toggle. Sort/filter by album type, "save to your Spotify library" (login required), and search-as-you-type suggestions are already built.

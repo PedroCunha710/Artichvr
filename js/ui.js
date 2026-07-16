@@ -1,6 +1,7 @@
 const els = {
   form: document.getElementById("search-form"),
   input: document.getElementById("search-input"),
+  suggestions: document.getElementById("search-suggestions"),
   artistCard: document.getElementById("artist-card"),
   albumsToolbar: document.getElementById("albums-toolbar"),
   albumsGrid: document.getElementById("albums-grid"),
@@ -64,10 +65,86 @@ function playHeroBackgroundCarousel() {
 export function onSearchSubmit(handler) {
   els.form.addEventListener("submit", (event) => {
     event.preventDefault();
+    clearSuggestions();
     const query = els.input.value.trim();
     if (query) handler(query);
   });
 }
+
+const SUGGESTION_DEBOUNCE_MS = 400;
+const SUGGESTION_MIN_LENGTH = 2;
+let suggestionDebounceTimer = null;
+let currentSuggestions = [];
+
+export function onSearchInput(handler) {
+  els.input.addEventListener("input", () => {
+    clearTimeout(suggestionDebounceTimer);
+    const query = els.input.value.trim();
+
+    if (query.length < SUGGESTION_MIN_LENGTH) {
+      clearSuggestions();
+      return;
+    }
+
+    suggestionDebounceTimer = setTimeout(() => handler(query), SUGGESTION_DEBOUNCE_MS);
+  });
+}
+
+export function renderSuggestions(artists) {
+  if (artists.length === 0) {
+    clearSuggestions();
+    return;
+  }
+
+  currentSuggestions = artists;
+  els.suggestions.innerHTML = artists
+    .map((artist, index) => {
+      const photo = artist.images[artist.images.length - 1]?.url ?? "";
+      return `
+        <li>
+          <button type="button" class="search-suggestion" data-index="${index}">
+            <img src="${photo}" alt="" />
+            <span>${escapeHtml(artist.name)}</span>
+          </button>
+        </li>
+      `;
+    })
+    .join("");
+
+  els.suggestions.hidden = false;
+  els.input.setAttribute("aria-expanded", "true");
+}
+
+export function clearSuggestions() {
+  currentSuggestions = [];
+  els.suggestions.hidden = true;
+  els.suggestions.innerHTML = "";
+  els.input.setAttribute("aria-expanded", "false");
+}
+
+export function onSuggestionSelect(handler) {
+  els.suggestions.addEventListener("click", (event) => {
+    const button = event.target.closest(".search-suggestion");
+    if (!button) return;
+
+    const artist = currentSuggestions[Number(button.dataset.index)];
+    if (!artist) return;
+
+    els.input.value = artist.name;
+    clearSuggestions();
+    handler(artist);
+  });
+}
+
+document.addEventListener("click", (event) => {
+  if (!els.suggestions.hidden && !event.target.closest(".search-input-wrap")) {
+    clearSuggestions();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") clearSuggestions();
+});
 
 export function onFilterChange(handler) {
   els.filterPills.forEach((pill) => {
