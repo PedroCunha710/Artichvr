@@ -4,6 +4,8 @@ const els = {
   artistCard: document.getElementById("artist-card"),
   albumsGrid: document.getElementById("albums-grid"),
   status: document.getElementById("status"),
+  statusText: document.getElementById("status-text"),
+  loader: document.getElementById("loader"),
 };
 
 const ALBUM_TYPE_LABELS = {
@@ -21,31 +23,38 @@ export function onSearchSubmit(handler) {
 }
 
 export function showLoading() {
-  els.status.hidden = false;
-  els.status.textContent = "Searching...";
+  document.body.classList.add("has-results");
+  els.loader.hidden = false;
+  els.status.hidden = true;
   els.artistCard.innerHTML = "";
   els.albumsGrid.innerHTML = "";
 }
 
 export function showError(message) {
+  els.loader.hidden = true;
   els.status.hidden = false;
-  els.status.textContent = message;
+  els.statusText.textContent = message;
 }
 
 export function clearStatus() {
+  els.loader.hidden = true;
   els.status.hidden = true;
-  els.status.textContent = "";
+  els.statusText.textContent = "";
 }
 
 export function renderArtist(artist) {
   const photo = artist.images[0]?.url ?? "";
-  const followers = artist.followers.total.toLocaleString("en-US");
+  const followersTotal = artist.followers?.total;
+  const followersLine =
+    typeof followersTotal === "number"
+      ? `<p>${followersTotal.toLocaleString("en-US")} followers</p>`
+      : "";
 
   els.artistCard.innerHTML = `
     <img class="artist-photo" src="${photo}" alt="${escapeHtml(artist.name)}" />
     <div>
       <h2>${escapeHtml(artist.name)}</h2>
-      <p>${followers} followers</p>
+      ${followersLine}
       <a class="spotify-link" href="${artist.external_urls.spotify}" target="_blank" rel="noopener">
         Open on Spotify
       </a>

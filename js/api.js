@@ -30,13 +30,27 @@ async function getAccessToken() {
   return accessToken;
 }
 
-async function spotifyFetch(url) {
+const MAX_RATE_LIMIT_RETRIES = 2;
+const RATE_LIMIT_BACKOFF_MS = 3000;
+
+async function spotifyFetch(url, attempt = 0) {
   const token = await getAccessToken();
   const response = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
+  if (response.status === 429 && attempt < MAX_RATE_LIMIT_RETRIES) {
+    // Spotify's 429 response includes a Retry-After header, but it isn't in
+    // Access-Control-Expose-Headers, so cross-origin fetch can't read it from
+    // the browser. Back off with a fixed, increasing delay instead.
+    await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_BACKOFF_MS * (attempt + 1)));
+    return spotifyFetch(url, attempt + 1);
+  }
+
   if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error("Spotify is rate-limiting this app right now. Please wait a moment and try again.");
+    }
     throw new Error(`Error ${response.status} while querying the Spotify API.`);
   }
 
@@ -51,7 +65,8 @@ export async function searchArtist(name) {
 
 export async function getArtistAlbums(artistId) {
   const albums = [];
-  let url = `${BASE_URL}/artists/${artistId}/albums?include_groups=album,single,compilation&limit=50&market=US`;
+  // Docs say limit can go up to 50, but dev-mode apps get "Invalid limit" above 10; pagination via `next` covers the rest.
+  let url = `${BASE_URL}/artists/${artistId}/albums?include_groups=album,single,compilation&limit=10&market=US`;
 
   while (url) {
     const data = await spotifyFetch(url);
