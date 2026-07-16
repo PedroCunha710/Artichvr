@@ -39,6 +39,21 @@ export function playIntroAnimation() {
     .call(() => {
       gsap.to(".logo-mark", { rotation: "+=360", duration: 9, ease: "none", repeat: -1 });
     });
+
+  playHeroBackgroundCarousel();
+}
+
+function playHeroBackgroundCarousel() {
+  const slides = Array.from(document.querySelectorAll(".hero-bg-slide"));
+  if (slides.length < 2) return;
+
+  const timeline = gsap.timeline({ repeat: -1 });
+  slides.forEach((slide, index) => {
+    const next = slides[(index + 1) % slides.length];
+    timeline
+      .to(slide, { opacity: 0, duration: 1.5, ease: "power1.inOut" }, "+=4")
+      .to(next, { opacity: 1, duration: 1.5, ease: "power1.inOut" }, "<");
+  });
 }
 
 export function onSearchSubmit(handler) {
@@ -197,6 +212,7 @@ function collapseHero() {
   gsap.set(heroCopy, { height: startHeight });
   gsap.to(heroCopy, { height: 0, opacity: 0, duration: 0.5, ease: "power2.inOut" });
   gsap.to(hero, { paddingTop: "1.5rem", paddingBottom: "1.5rem", duration: 0.5, ease: "power2.inOut" });
+  gsap.to(".hero-bg, .hero-overlay", { opacity: 0, duration: 0.5, ease: "power2.inOut" });
 }
 
 function playVinylLoader() {
