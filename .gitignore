@@ -1,3 +1,9 @@
 js/config.js
 .DS_Store
 Thumbs.db
+
+# Local-only npm artifacts (e.g. editor autocomplete for gsap) - the app
+# itself loads GSAP via CDN <script> tag, no build step or npm dependency.
+node_modules/
+package.json
+package-lock.json

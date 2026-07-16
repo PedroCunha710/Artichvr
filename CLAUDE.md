@@ -10,6 +10,7 @@ Spotify Album Finder — a static, front-end-only web app to search an artist an
 
 - HTML5 / CSS3 / JavaScript ES6+ (no framework, no bundler, no build step)
 - Native ES modules (`<script type="module">`) — import/export between files in `js/`
+- [GSAP](https://gsap.com/) for animation, loaded via CDN `<script>` tag (classic, not a module) before `app.js` — `window.gsap` is used as a global inside `ui.js`, no import statement. Chosen over more CSS `@keyframes` because it can orchestrate sequences (tonearm-drop-then-spin, staggered card entrances) that plain CSS animations handle awkwardly.
 - Spotify Web API (Search, Artists, Albums endpoints)
 - No backend/server component
 
@@ -37,6 +38,15 @@ Two separate flows, for two separate purposes:
 - **Authorization Code + PKCE** (`js/auth.js`) — user login, needed for anything done *as* the user (currently: saving/removing albums in their library, scopes `user-library-modify`/`user-library-read`). PKCE needs no client secret, so it's safe as a pure-frontend flow. Access + refresh tokens are kept in `localStorage`; the redirect URI is computed at runtime (`location.origin + location.pathname`) and must exactly match one registered in the Spotify dashboard, so the app must be opened at that exact URL (trailing slash included) for login to work.
 
 Credentials live in `js/config.js`, which is gitignored. `js/config.example.js` is the template committed to the repo.
+
+## Animation
+
+Split deliberately between GSAP and plain CSS, not converted wholesale:
+
+- **GSAP** (in `ui.js`) handles anything sequenced or JS-triggered: the loader's tonearm-drop-then-spin timeline, the error state's needle jitter, the hero's collapse-on-first-search, staggered entrance of the artist card and album grid, and the save-button "pop" on click.
+- **CSS** still handles simple, always-on hover/focus states (buttons, pills, card lift on hover) — GSAP would add no value there and just be more code to read.
+
+`transform-origin` for the SVG loader/error icons stays in CSS; GSAP only animates `rotation`/`opacity`/etc. on top of it.
 
 ## Running locally
 
