@@ -13,7 +13,11 @@ const els = {
   loginButton: document.getElementById("login-button"),
   logoutButton: document.getElementById("logout-button"),
   userChip: document.getElementById("user-chip"),
+  userMenuButton: document.getElementById("user-menu-button"),
+  userMenu: document.getElementById("user-menu"),
   userName: document.getElementById("user-name"),
+  userAvatarImg: document.getElementById("user-avatar-img"),
+  userAvatarFallback: document.getElementById("user-avatar-fallback"),
 };
 
 const ALBUM_TYPE_LABELS = {
@@ -113,14 +117,51 @@ export function showLoggedOut() {
   document.body.classList.remove("logged-in");
   els.loginButton.hidden = false;
   els.userChip.hidden = true;
+  closeUserMenu();
 }
 
-export function showLoggedIn(displayName) {
+export function showLoggedIn(displayName, avatarUrl) {
   document.body.classList.add("logged-in");
   els.loginButton.hidden = true;
   els.userChip.hidden = false;
   els.userName.textContent = displayName;
+
+  if (avatarUrl) {
+    els.userAvatarImg.src = avatarUrl;
+    els.userAvatarImg.hidden = false;
+    els.userAvatarFallback.hidden = true;
+  } else {
+    els.userAvatarImg.hidden = true;
+    els.userAvatarFallback.hidden = false;
+    els.userAvatarFallback.textContent = displayName.charAt(0).toUpperCase();
+  }
 }
+
+function closeUserMenu() {
+  els.userMenu.hidden = true;
+  els.userMenuButton.setAttribute("aria-expanded", "false");
+}
+
+els.userMenuButton.addEventListener("click", (event) => {
+  event.stopPropagation();
+  const isOpen = !els.userMenu.hidden;
+  if (isOpen) {
+    closeUserMenu();
+  } else {
+    els.userMenu.hidden = false;
+    els.userMenuButton.setAttribute("aria-expanded", "true");
+  }
+});
+
+document.addEventListener("click", (event) => {
+  if (!els.userChip.contains(event.target)) closeUserMenu();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeUserMenu();
+});
+
+els.logoutButton.addEventListener("click", closeUserMenu);
 
 export function showLoading() {
   if (!document.body.classList.contains("has-results")) {
@@ -221,13 +262,16 @@ function collapseHero() {
 
 function playVinylLoader() {
   vinylTimeline?.kill();
-  gsap.set(".tonearm", { rotation: -18 });
-  gsap.set(".vinyl-disc", { rotation: 0 });
+  // svgOrigin (not transformOrigin) pins the pivot to a point in the SVG's own
+  // viewBox coordinates - GSAP otherwise resolves px origins against the
+  // rotating element's own tiny bounding box, sending it wildly off-center.
+  gsap.set(".tonearm", { rotation: -18, svgOrigin: "114 20" });
+  gsap.set(".vinyl-disc", { rotation: 0, svgOrigin: "55 65" });
 
   vinylTimeline = gsap
     .timeline()
-    .to(".tonearm", { rotation: 0, duration: 0.7, ease: "power2.out" })
-    .to(".vinyl-disc", { rotation: "+=360", duration: 1.1, ease: "none", repeat: -1 }, 0.7);
+    .to(".tonearm", { rotation: 0, duration: 0.7, ease: "power2.out", svgOrigin: "114 20" })
+    .to(".vinyl-disc", { rotation: "+=360", duration: 1.1, ease: "none", repeat: -1, svgOrigin: "55 65" }, 0.7);
 }
 
 function stopVinylLoader() {
@@ -237,11 +281,11 @@ function stopVinylLoader() {
 
 function playErrorJitter() {
   errorTimeline?.kill();
-  gsap.set(".error-needle", { rotation: 0 });
+  gsap.set(".error-needle", { rotation: 0, svgOrigin: "70 12" });
 
   errorTimeline = gsap
     .timeline({ repeat: -1, repeatDelay: 0.6 })
-    .to(".error-needle", { rotation: -18, duration: 0.18 })
+    .to(".error-needle", { rotation: -18, duration: 0.18, svgOrigin: "70 12" })
     .to(".error-needle", { rotation: 12, duration: 0.18 })
     .to(".error-needle", { rotation: -20, duration: 0.18 })
     .to(".error-needle", { rotation: 8, duration: 0.18 })

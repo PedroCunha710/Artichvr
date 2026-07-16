@@ -16,6 +16,8 @@
 body {
   margin: 0;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: var(--bg);
   color: var(--text);
   font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -31,7 +33,13 @@ a {
   justify-content: space-between;
   gap: 1rem;
   padding: 1.25rem 2rem;
-  background: var(--bg-elevated);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(24, 24, 24, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .auth-area {
@@ -61,30 +69,90 @@ a {
 }
 
 .user-chip {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  position: relative;
 }
 
 .user-chip[hidden] {
   display: none;
 }
 
-.logout-button {
-  padding: 0.35rem 0.9rem;
+.user-menu-button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.9rem 0.3rem 0.3rem;
   border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.user-menu-button:hover,
+.user-menu-button[aria-expanded="true"] {
+  border-color: #2a2a2a;
+  background: var(--bg-card);
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-avatar img[hidden] {
+  display: none;
+}
+
+.user-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 140px;
+  padding: 0.4rem;
+  border-radius: var(--radius);
   border: 1px solid #2a2a2a;
+  background: var(--bg-card);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+}
+
+.user-menu[hidden] {
+  display: none;
+}
+
+.logout-button {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: calc(var(--radius) - 2px);
+  border: none;
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  text-align: left;
   cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .logout-button:hover {
-  border-color: var(--accent);
+  background: #2a2a2a;
   color: var(--text);
 }
 
@@ -116,16 +184,25 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2rem;
   text-align: center;
   padding: 4rem 2rem 3rem;
   overflow: hidden;
+  flex: 1 0 auto;
+  min-height: 420px;
+  transition: flex-grow 0.5s ease;
+}
+
+body.has-results .hero {
+  flex: 0 0 auto;
+  min-height: 0;
 }
 
 .hero-bg {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
 }
 
 .hero-bg-slide {
@@ -141,9 +218,9 @@ a {
 }
 
 .hero-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: -1;
   background: linear-gradient(
     180deg,
     rgba(18, 18, 18, 0.55) 0%,
@@ -168,6 +245,7 @@ a {
   font-size: clamp(1.75rem, 5vw, 3rem);
   font-weight: 800;
   letter-spacing: -0.02em;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.7);
 }
 
 .hero-subtitle {
@@ -175,6 +253,7 @@ a {
   color: var(--text-muted);
   font-size: 1.05rem;
   line-height: 1.6;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.8);
 }
 
 .search-form {
@@ -242,10 +321,6 @@ main {
   flex-shrink: 0;
 }
 
-.error-needle {
-  transform-origin: 70px 12px;
-}
-
 .loader {
   display: flex;
   flex-direction: column;
@@ -262,14 +337,6 @@ main {
 .turntable {
   overflow: visible;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
-}
-
-.vinyl-disc {
-  transform-origin: 55px 65px;
-}
-
-.tonearm {
-  transform-origin: 114px 20px;
 }
 
 .artist-card {
