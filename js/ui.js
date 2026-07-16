@@ -39,13 +39,17 @@ export function clearStatus() {
 
 export function renderArtist(artist) {
   const photo = artist.images[0]?.url ?? "";
-  const followers = artist.followers.total.toLocaleString("en-US");
+  const followersTotal = artist.followers?.total;
+  const followersLine =
+    typeof followersTotal === "number"
+      ? `<p>${followersTotal.toLocaleString("en-US")} followers</p>`
+      : "";
 
   els.artistCard.innerHTML = `
     <img class="artist-photo" src="${photo}" alt="${escapeHtml(artist.name)}" />
     <div>
       <h2>${escapeHtml(artist.name)}</h2>
-      <p>${followers} followers</p>
+      ${followersLine}
       <a class="spotify-link" href="${artist.external_urls.spotify}" target="_blank" rel="noopener">
         Open on Spotify
       </a>

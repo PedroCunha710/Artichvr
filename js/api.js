@@ -51,7 +51,8 @@ export async function searchArtist(name) {
 
 export async function getArtistAlbums(artistId) {
   const albums = [];
-  let url = `${BASE_URL}/artists/${artistId}/albums?include_groups=album,single,compilation&limit=50&market=US`;
+  // Docs say limit can go up to 50, but dev-mode apps get "Invalid limit" above 10; pagination via `next` covers the rest.
+  let url = `${BASE_URL}/artists/${artistId}/albums?include_groups=album,single,compilation&limit=10&market=US`;
 
   while (url) {
     const data = await spotifyFetch(url);
