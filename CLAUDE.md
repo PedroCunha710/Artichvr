@@ -42,7 +42,7 @@ Needs to be served over HTTP (ES modules and the Spotify token request don't wor
 
 - No comments unless the code hides a non-obvious reason (e.g. the auth trade-off above).
 - Escape any text interpolated from the Spotify API into HTML templates (artist/album names) before rendering — don't assume API data is safe to inject raw.
-- Portuguese for user-facing strings and README; English or Portuguese is fine in code identifiers, keep it consistent within a file.
+- All user-facing strings and docs are in English.
 
 ## Roadmap (not yet built)
 

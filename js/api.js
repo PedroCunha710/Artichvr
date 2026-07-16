@@ -21,7 +21,7 @@ async function getAccessToken() {
   });
 
   if (!response.ok) {
-    throw new Error("Não foi possível autenticar com a Spotify API.");
+    throw new Error("Could not authenticate with the Spotify API.");
   }
 
   const data = await response.json();
@@ -37,7 +37,7 @@ async function spotifyFetch(url) {
   });
 
   if (!response.ok) {
-    throw new Error(`Erro ${response.status} ao consultar a Spotify API.`);
+    throw new Error(`Error ${response.status} while querying the Spotify API.`);
   }
 
   return response.json();

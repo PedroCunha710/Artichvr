@@ -7,9 +7,9 @@ const els = {
 };
 
 const ALBUM_TYPE_LABELS = {
-  album: "Álbum",
+  album: "Album",
   single: "Single",
-  compilation: "Compilação",
+  compilation: "Compilation",
 };
 
 export function onSearchSubmit(handler) {
@@ -22,7 +22,7 @@ export function onSearchSubmit(handler) {
 
 export function showLoading() {
   els.status.hidden = false;
-  els.status.textContent = "A procurar...";
+  els.status.textContent = "Searching...";
   els.artistCard.innerHTML = "";
   els.albumsGrid.innerHTML = "";
 }
@@ -39,15 +39,15 @@ export function clearStatus() {
 
 export function renderArtist(artist) {
   const photo = artist.images[0]?.url ?? "";
-  const followers = artist.followers.total.toLocaleString("pt-PT");
+  const followers = artist.followers.total.toLocaleString("en-US");
 
   els.artistCard.innerHTML = `
     <img class="artist-photo" src="${photo}" alt="${escapeHtml(artist.name)}" />
     <div>
       <h2>${escapeHtml(artist.name)}</h2>
-      <p>${followers} seguidores</p>
+      <p>${followers} followers</p>
       <a class="spotify-link" href="${artist.external_urls.spotify}" target="_blank" rel="noopener">
-        Abrir no Spotify
+        Open on Spotify
       </a>
     </div>
   `;
@@ -56,7 +56,7 @@ export function renderArtist(artist) {
 export function renderAlbums(albums) {
   if (albums.length === 0) {
     els.albumsGrid.innerHTML = "";
-    showError("Este artista não tem álbuns disponíveis.");
+    showError("This artist has no albums available.");
     return;
   }
 
@@ -74,7 +74,7 @@ function albumCardHtml(album) {
       <div class="album-info">
         <h3>${escapeHtml(album.name)}</h3>
         <p>${year} • ${type}</p>
-        <p>${album.total_tracks} faixas</p>
+        <p>${album.total_tracks} tracks</p>
       </div>
     </a>
   `;

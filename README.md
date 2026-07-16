@@ -1,40 +1,40 @@
 # 🎵 Spotify Album Finder
 
-Aplicação web open source que permite pesquisar qualquer artista e visualizar toda a sua discografia através da Spotify Web API.
+Open source web app to search any artist and browse their full discography via the Spotify Web API.
 
-Projeto pessoal criado para demonstrar consumo de APIs REST, manipulação do DOM e boas práticas de JavaScript moderno (ES6+), sem frameworks nem build tools.
+Personal project built to demonstrate REST API consumption, DOM manipulation, and modern JavaScript (ES6+) best practices, with no frameworks or build tools.
 
-## Demonstração
+## Demo
 
-> 🔗 _Link para a versão live (GitHub Pages / Netlify / Vercel) — adicionar aqui assim que estiver publicado._
+> 🔗 _Link to the live version (GitHub Pages / Netlify / Vercel) — add here once published._
 
 ## Screenshots
 
-> 📸 _Adicionar aqui screenshots da aplicação (pesquisa, cartão do artista, grelha de álbuns) assim que a interface estiver pronta._
+> 📸 _Add screenshots of the app here (search, artist card, album grid) once the interface is ready._
 
-## Funcionalidades
+## Features
 
-- Pesquisa de artista pelo nome
-- Listagem de todos os álbuns, singles e compilações
-- Para cada álbum: capa, nome, data de lançamento, número de faixas, tipo e link direto para o Spotify
-- Interface responsiva com tema escuro
-- Estados de loading e tratamento de erros
+- Search for an artist by name
+- Lists all albums, singles, and compilations
+- For each album: cover art, name, release date, track count, type, and a direct link to Spotify
+- Responsive UI with a dark theme
+- Loading and error states
 
-### Extras planeados
+### Planned extras
 
-- Pesquisa em tempo real
-- Ordenação por data e filtro por tipo de álbum
-- Histórico de pesquisas (localStorage) e favoritos
+- Real-time search
+- Sort by date and filter by album type
+- Search history (localStorage) and favorites
 
-## Tecnologias
+## Tech stack
 
 - HTML5
 - CSS3
-- JavaScript (ES6+, módulos nativos, sem bundler)
+- JavaScript (ES6+, native modules, no bundler)
 - [Spotify Web API](https://developer.spotify.com/documentation/web-api)
 - Git & GitHub
 
-## Estrutura do projeto
+## Project structure
 
 ```
 spotify-album-finder/
@@ -43,55 +43,55 @@ spotify-album-finder/
 ├── css/
 │   └── style.css
 ├── js/
-│   ├── api.js              # chamadas à Spotify API + autenticação
-│   ├── ui.js                # renderização no DOM
-│   ├── app.js                # ligação entre api.js e ui.js
-│   ├── config.js             # credenciais reais (não commitado)
-│   └── config.example.js     # template de configuração
+│   ├── api.js              # Spotify API calls + authentication
+│   ├── ui.js                # DOM rendering
+│   ├── app.js                # wires api.js and ui.js together
+│   ├── config.js             # real credentials (not committed)
+│   └── config.example.js     # configuration template
 ├── assets/
 ├── README.md
 └── LICENSE
 ```
 
-## Como executar
+## Running locally
 
-Este projeto não tem build step, mas os módulos ES6 e o pedido de token à Spotify só funcionam servidos por HTTP (não abrir `index.html` diretamente com `file://`).
+This project has no build step, but ES modules and the Spotify token request only work when served over HTTP (don't open `index.html` directly with `file://`).
 
 ```bash
-git clone https://github.com/<o-teu-user>/spotify-album-finder.git
+git clone https://github.com/<your-username>/spotify-album-finder.git
 cd spotify-album-finder
 npx serve
 ```
 
-Ou usa a extensão **Live Server** do VS Code.
+Or use the VS Code **Live Server** extension.
 
-## Como configurar a Spotify API
+## Configuring the Spotify API
 
-1. Cria uma app em [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) e obtém o **Client ID** e o **Client Secret**.
-2. Copia o template de configuração:
+1. Create an app at [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) and get your **Client ID** and **Client Secret**.
+2. Copy the configuration template:
    ```bash
    cp js/config.example.js js/config.js
    ```
-3. Preenche `js/config.js` com as tuas credenciais:
+3. Fill in `js/config.js` with your credentials:
    ```js
-   export const CLIENT_ID = "o-teu-client-id";
-   export const CLIENT_SECRET = "o-teu-client-secret";
+   export const CLIENT_ID = "your-client-id";
+   export const CLIENT_SECRET = "your-client-secret";
    ```
-4. `js/config.js` está no `.gitignore` — nunca commites as tuas credenciais.
+4. `js/config.js` is in `.gitignore` — never commit your credentials.
 
-> ⚠️ Este projeto usa o **Client Credentials Flow** diretamente no browser (sem backend), pelo que o Client Secret fica exposto no código do lado do cliente. Aceitável para um projeto de demonstração com dados públicos e sem login de utilizador; não é o padrão recomendado para uma aplicação em produção com dados sensíveis.
+> ⚠️ This project uses the **Client Credentials Flow** directly in the browser (no backend), so the Client Secret is exposed in client-side code. That's acceptable for a demo project with public data and no user login; it's not the recommended pattern for a production app handling sensitive data.
 
-## Licença
+## License
 
-Distribuído sob licença MIT. Consulta o ficheiro [LICENSE](LICENSE) para mais detalhes.
+Distributed under the MIT license. See the [LICENSE](LICENSE) file for details.
 
-## Contribuições
+## Contributing
 
-Contribuições são bem-vindas! Para propor uma alteração:
+Contributions are welcome! To propose a change:
 
-1. Faz um fork do repositório
-2. Cria um branch (`git checkout -b feature/nome-da-feature`)
-3. Faz commit das alterações
-4. Abre um Pull Request a descrever a alteração
+1. Fork the repository
+2. Create a branch (`git checkout -b feature/your-feature-name`)
+3. Commit your changes
+4. Open a Pull Request describing the change
 
-Sugestões e reports de bugs podem ser abertos em [Issues](../../issues).
+Suggestions and bug reports can be opened in [Issues](../../issues).

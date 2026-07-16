@@ -15,7 +15,7 @@ onSearchSubmit(async (query) => {
     const artist = await searchArtist(query);
 
     if (!artist) {
-      showError(`Nenhum artista encontrado para "${query}".`);
+      showError(`No artist found for "${query}".`);
       return;
     }
 
@@ -24,6 +24,6 @@ onSearchSubmit(async (query) => {
     renderAlbums(albums);
     clearStatus();
   } catch (error) {
-    showError(error.message || "Ocorreu um erro inesperado.");
+    showError(error.message || "Something went wrong.");
   }
 });
