@@ -4,6 +4,7 @@ const els = {
   artistCard: document.getElementById("artist-card"),
   albumsGrid: document.getElementById("albums-grid"),
   status: document.getElementById("status"),
+  loader: document.getElementById("loader"),
 };
 
 const ALBUM_TYPE_LABELS = {
@@ -21,18 +22,21 @@ export function onSearchSubmit(handler) {
 }
 
 export function showLoading() {
-  els.status.hidden = false;
-  els.status.textContent = "Searching...";
+  document.body.classList.add("has-results");
+  els.loader.hidden = false;
+  els.status.hidden = true;
   els.artistCard.innerHTML = "";
   els.albumsGrid.innerHTML = "";
 }
 
 export function showError(message) {
+  els.loader.hidden = true;
   els.status.hidden = false;
   els.status.textContent = message;
 }
 
 export function clearStatus() {
+  els.loader.hidden = true;
   els.status.hidden = true;
   els.status.textContent = "";
 }

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Spotify Album Finder</title>
+    <title>Artichvr — Spotify Album Finder</title>
     <meta
       name="description"
       content="Search for any artist and browse their full discography via the Spotify Web API."
@@ -12,7 +12,19 @@
   </head>
   <body>
     <header class="site-header">
-      <h1 class="logo">🎵 Album Finder</h1>
+      <h1 class="logo">🎵 Artichvr</h1>
+    </header>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <h2 class="hero-title">Every album. One search.</h2>
+        <p class="hero-subtitle">
+          Artichvr digs through Spotify's catalog and brings back an artist's entire
+          discography — albums, singles, and compilations, with cover art, release
+          dates, and track counts included.
+        </p>
+      </div>
+
       <form id="search-form" class="search-form" autocomplete="off">
         <input
           id="search-input"
@@ -24,9 +36,13 @@
         />
         <button type="submit">Search</button>
       </form>
-    </header>
+    </section>
 
     <main>
+      <div id="loader" class="loader" hidden>
+        <div class="vinyl" aria-hidden="true"></div>
+        <p>Searching...</p>
+      </div>
       <p id="status" class="status" role="status" hidden></p>
       <section id="artist-card" class="artist-card"></section>
       <section id="albums-grid" class="albums-grid"></section>
