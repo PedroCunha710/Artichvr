@@ -108,6 +108,7 @@ a {
 
 .logo-mark {
   flex-shrink: 0;
+  transform-origin: center;
 }
 
 .hero {

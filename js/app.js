@@ -8,6 +8,7 @@ import {
 } from "./api.js";
 import { redirectToLogin, handleRedirectCallback, getUserAccessToken, isLoggedIn, logout } from "./auth.js";
 import {
+  playIntroAnimation,
   onSearchSubmit,
   onFilterChange,
   onSortChange,
@@ -94,6 +95,7 @@ onSaveAlbumClick(async (albumId, button) => {
   }
 });
 
+playIntroAnimation();
 initAuth();
 
 async function initAuth() {

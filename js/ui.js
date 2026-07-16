@@ -26,6 +26,21 @@ const ALBUM_TYPE_LABELS = {
 let vinylTimeline = null;
 let errorTimeline = null;
 
+export function playIntroAnimation() {
+  gsap
+    .timeline()
+    .from(".logo-mark", { opacity: 0, rotation: -60, scale: 0.6, duration: 0.6, ease: "back.out(1.8)" })
+    .from(".logo-text", { opacity: 0, x: -12, duration: 0.4, ease: "power2.out" }, "-=0.3")
+    .from(".auth-area", { opacity: 0, duration: 0.4 }, "-=0.25")
+    .from(".hero-title", { opacity: 0, y: 28, duration: 0.6, ease: "power3.out" }, "-=0.15")
+    .from(".hero-subtitle", { opacity: 0, y: 18, duration: 0.5, ease: "power3.out" }, "-=0.35")
+    .from(".search-form", { opacity: 0, y: 18, scale: 0.96, duration: 0.5, ease: "power3.out" }, "-=0.3")
+    .from(".site-footer p", { opacity: 0, duration: 0.5 }, "-=0.2")
+    .call(() => {
+      gsap.to(".logo-mark", { rotation: "+=360", duration: 9, ease: "none", repeat: -1 });
+    });
+}
+
 export function onSearchSubmit(handler) {
   els.form.addEventListener("submit", (event) => {
     event.preventDefault();
