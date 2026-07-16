@@ -87,3 +87,59 @@ function dedupeAlbums(albums) {
     (a, b) => new Date(b.release_date) - new Date(a.release_date)
   );
 }
+
+// The functions below act on behalf of a logged-in user, so they take a user
+// access token (from auth.js) rather than the app-level token above.
+
+export async function getCurrentUserProfile(userToken) {
+  const response = await fetch(`${BASE_URL}/me`, {
+    headers: { Authorization: `Bearer ${userToken}` },
+  });
+
+  if (!response.ok) {
+    throw new Error("Could not load your Spotify profile.");
+  }
+
+  return response.json();
+}
+
+export async function checkAlbumsSaved(albumIds, userToken) {
+  const results = [];
+
+  for (let i = 0; i < albumIds.length; i += 50) {
+    const chunk = albumIds.slice(i, i + 50);
+    const response = await fetch(`${BASE_URL}/me/albums/contains?ids=${chunk.join(",")}`, {
+      headers: { Authorization: `Bearer ${userToken}` },
+    });
+
+    if (!response.ok) {
+      throw new Error("Could not check which albums are already saved.");
+    }
+
+    results.push(...(await response.json()));
+  }
+
+  return results;
+}
+
+export async function saveAlbum(albumId, userToken) {
+  const response = await fetch(`${BASE_URL}/me/albums?ids=${albumId}`, {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${userToken}` },
+  });
+
+  if (!response.ok) {
+    throw new Error("Could not save this album to your library.");
+  }
+}
+
+export async function removeSavedAlbum(albumId, userToken) {
+  const response = await fetch(`${BASE_URL}/me/albums?ids=${albumId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${userToken}` },
+  });
+
+  if (!response.ok) {
+    throw new Error("Could not remove this album from your library.");
+  }
+}
