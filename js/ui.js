@@ -2,7 +2,11 @@ const els = {
   form: document.getElementById("search-form"),
   input: document.getElementById("search-input"),
   artistCard: document.getElementById("artist-card"),
+  albumsToolbar: document.getElementById("albums-toolbar"),
   albumsGrid: document.getElementById("albums-grid"),
+  albumsEmpty: document.getElementById("albums-empty"),
+  filterPills: Array.from(document.querySelectorAll(".filter-pill")),
+  sortSelect: document.getElementById("sort-select"),
   status: document.getElementById("status"),
   statusText: document.getElementById("status-text"),
   loader: document.getElementById("loader"),
@@ -22,10 +26,35 @@ export function onSearchSubmit(handler) {
   });
 }
 
+export function onFilterChange(handler) {
+  els.filterPills.forEach((pill) => {
+    pill.addEventListener("click", () => {
+      pill.classList.toggle("is-active");
+      handler();
+    });
+  });
+}
+
+export function onSortChange(handler) {
+  els.sortSelect.addEventListener("change", handler);
+}
+
+export function getActiveTypes() {
+  return els.filterPills
+    .filter((pill) => pill.classList.contains("is-active"))
+    .map((pill) => pill.dataset.type);
+}
+
+export function getSortOrder() {
+  return els.sortSelect.value;
+}
+
 export function showLoading() {
   document.body.classList.add("has-results");
   els.loader.hidden = false;
   els.status.hidden = true;
+  els.albumsToolbar.hidden = true;
+  els.albumsEmpty.hidden = true;
   els.artistCard.innerHTML = "";
   els.albumsGrid.innerHTML = "";
 }
@@ -33,6 +62,8 @@ export function showLoading() {
 export function showError(message) {
   els.loader.hidden = true;
   els.status.hidden = false;
+  els.albumsToolbar.hidden = true;
+  els.albumsEmpty.hidden = true;
   els.statusText.textContent = message;
 }
 
@@ -63,12 +94,15 @@ export function renderArtist(artist) {
 }
 
 export function renderAlbums(albums) {
+  els.albumsToolbar.hidden = false;
+
   if (albums.length === 0) {
     els.albumsGrid.innerHTML = "";
-    showError("This artist has no albums available.");
+    els.albumsEmpty.hidden = false;
     return;
   }
 
+  els.albumsEmpty.hidden = true;
   els.albumsGrid.innerHTML = albums.map(albumCardHtml).join("");
 }
 

@@ -84,6 +84,18 @@
         <p id="status-text"></p>
       </div>
       <section id="artist-card" class="artist-card"></section>
+      <div id="albums-toolbar" class="albums-toolbar" hidden>
+        <div class="filter-pills" role="group" aria-label="Filter by album type">
+          <button type="button" class="filter-pill is-active" data-type="album">Albums</button>
+          <button type="button" class="filter-pill is-active" data-type="single">Singles</button>
+          <button type="button" class="filter-pill is-active" data-type="compilation">Compilations</button>
+        </div>
+        <select id="sort-select" class="sort-select" aria-label="Sort albums by release date">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+      </div>
+      <p id="albums-empty" class="albums-empty" hidden>No albums match the selected filters.</p>
       <section id="albums-grid" class="albums-grid"></section>
     </main>
 
