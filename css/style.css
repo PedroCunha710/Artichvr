@@ -35,6 +35,23 @@ a {
   font-size: 1.35rem;
 }
 
+.logo a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: inherit;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.logo a:hover {
+  opacity: 0.8;
+}
+
+.logo-mark {
+  flex-shrink: 0;
+}
+
 .hero {
   display: flex;
   flex-direction: column;
