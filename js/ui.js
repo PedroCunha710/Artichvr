@@ -4,6 +4,7 @@ const els = {
   artistCard: document.getElementById("artist-card"),
   albumsGrid: document.getElementById("albums-grid"),
   status: document.getElementById("status"),
+  statusText: document.getElementById("status-text"),
   loader: document.getElementById("loader"),
 };
 
@@ -32,13 +33,13 @@ export function showLoading() {
 export function showError(message) {
   els.loader.hidden = true;
   els.status.hidden = false;
-  els.status.textContent = message;
+  els.statusText.textContent = message;
 }
 
 export function clearStatus() {
   els.loader.hidden = true;
   els.status.hidden = true;
-  els.status.textContent = "";
+  els.statusText.textContent = "";
 }
 
 export function renderArtist(artist) {

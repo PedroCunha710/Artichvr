@@ -70,7 +70,19 @@
         </svg>
         <p>Searching...</p>
       </div>
-      <p id="status" class="status" role="status" hidden></p>
+      <div id="status" class="status" role="status" hidden>
+        <svg class="error-mark" viewBox="0 0 80 80" width="64" height="64" aria-hidden="true">
+          <circle cx="40" cy="40" r="34" fill="#181818" stroke="#2f2f2f" />
+          <circle cx="40" cy="40" r="24" fill="none" stroke="#2a2a2a" />
+          <circle cx="40" cy="40" r="15" fill="none" stroke="#2a2a2a" />
+          <circle cx="40" cy="40" r="7" fill="#e0483e" />
+          <g class="error-needle">
+            <line x1="70" y1="12" x2="47" y2="29" stroke="#c9c9c9" stroke-width="3" stroke-linecap="round" />
+            <circle cx="70" cy="12" r="5" fill="#3a3a3a" stroke="#555" />
+          </g>
+        </svg>
+        <p id="status-text"></p>
+      </div>
       <section id="artist-card" class="artist-card"></section>
       <section id="albums-grid" class="albums-grid"></section>
     </main>
