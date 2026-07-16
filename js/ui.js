@@ -25,6 +25,7 @@ const ALBUM_TYPE_LABELS = {
 // gsap is loaded globally via a <script> tag in index.html (no bundler in this project).
 let vinylTimeline = null;
 let errorTimeline = null;
+let logoSpinTween = null;
 
 export function playIntroAnimation() {
   gsap
@@ -37,8 +38,23 @@ export function playIntroAnimation() {
     .from(".search-form", { opacity: 0, y: 18, scale: 0.96, duration: 0.5, ease: "power3.out" }, "-=0.3")
     .from(".site-footer p", { opacity: 0, duration: 0.5 }, "-=0.2")
     .call(() => {
-      gsap.to(".logo-mark", { rotation: "+=360", duration: 9, ease: "none", repeat: -1 });
+      logoSpinTween = gsap.to(".logo-mark", { rotation: "+=360", duration: 9, ease: "none", repeat: -1 });
     });
+
+  playHeroBackgroundCarousel();
+}
+
+function playHeroBackgroundCarousel() {
+  const slides = Array.from(document.querySelectorAll(".hero-bg-slide"));
+  if (slides.length < 2) return;
+
+  const timeline = gsap.timeline({ repeat: -1 });
+  slides.forEach((slide, index) => {
+    const next = slides[(index + 1) % slides.length];
+    timeline
+      .to(slide, { opacity: 0, duration: 1.5, ease: "power1.inOut" }, "+=4")
+      .to(next, { opacity: 1, duration: 1.5, ease: "power1.inOut" }, "<");
+  });
 }
 
 export function onSearchSubmit(handler) {
@@ -113,6 +129,7 @@ export function showLoading() {
   }
 
   stopErrorJitter();
+  logoSpinTween?.pause();
   els.loader.hidden = false;
   els.status.hidden = true;
   els.albumsToolbar.hidden = true;
@@ -124,6 +141,7 @@ export function showLoading() {
 
 export function showError(message) {
   stopVinylLoader();
+  logoSpinTween?.pause();
   els.loader.hidden = true;
   els.status.hidden = false;
   els.albumsToolbar.hidden = true;
@@ -135,6 +153,7 @@ export function showError(message) {
 export function clearStatus() {
   stopVinylLoader();
   stopErrorJitter();
+  logoSpinTween?.resume();
   els.loader.hidden = true;
   els.status.hidden = true;
   els.statusText.textContent = "";
@@ -197,6 +216,7 @@ function collapseHero() {
   gsap.set(heroCopy, { height: startHeight });
   gsap.to(heroCopy, { height: 0, opacity: 0, duration: 0.5, ease: "power2.inOut" });
   gsap.to(hero, { paddingTop: "1.5rem", paddingBottom: "1.5rem", duration: 0.5, ease: "power2.inOut" });
+  gsap.to(".hero-bg, .hero-overlay", { opacity: 0, duration: 0.5, ease: "power2.inOut" });
 }
 
 function playVinylLoader() {
@@ -220,14 +240,12 @@ function playErrorJitter() {
   gsap.set(".error-needle", { rotation: 0 });
 
   errorTimeline = gsap
-    .timeline({ repeat: -1 })
-    .to(".error-needle", { rotation: -22, duration: 0.075 })
-    .to(".error-needle", { rotation: 16, duration: 0.075 })
-    .to(".error-needle", { rotation: -26, duration: 0.075 })
-    .to(".error-needle", { rotation: 12, duration: 0.075 })
-    .to(".error-needle", { rotation: -16, duration: 0.075 })
-    .to(".error-needle", { rotation: 20, duration: 0.075 })
-    .to(".error-needle", { rotation: 0, duration: 0.075 });
+    .timeline({ repeat: -1, repeatDelay: 0.6 })
+    .to(".error-needle", { rotation: -18, duration: 0.18 })
+    .to(".error-needle", { rotation: 12, duration: 0.18 })
+    .to(".error-needle", { rotation: -20, duration: 0.18 })
+    .to(".error-needle", { rotation: 8, duration: 0.18 })
+    .to(".error-needle", { rotation: 0, duration: 0.18 });
 }
 
 function stopErrorJitter() {

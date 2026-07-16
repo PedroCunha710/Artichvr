@@ -43,10 +43,14 @@ Credentials live in `js/config.js`, which is gitignored. `js/config.example.js` 
 
 Split deliberately between GSAP and plain CSS, not converted wholesale:
 
-- **GSAP** (in `ui.js`) handles anything sequenced or JS-triggered: the loader's tonearm-drop-then-spin timeline, the error state's needle jitter, the hero's collapse-on-first-search, staggered entrance of the artist card and album grid, and the save-button "pop" on click.
+- **GSAP** (in `ui.js`) handles anything sequenced or JS-triggered: the one-time page-load intro (logo spin-in, cascading header/hero/footer reveal, then a continuous slow ambient spin on the small header logo), the hero background photo carousel (crossfade every ~4s), the loader's tonearm-drop-then-spin timeline, the error state's needle jitter, the hero's collapse-on-first-search, staggered entrance of the artist card and album grid, and the save-button "pop" on click.
 - **CSS** still handles simple, always-on hover/focus states (buttons, pills, card lift on hover) — GSAP would add no value there and just be more code to read.
 
 `transform-origin` for the SVG loader/error icons stays in CSS; GSAP only animates `rotation`/`opacity`/etc. on top of it.
+
+## Hero background photos
+
+`.hero-bg-slide` divs in `index.html` hotlink directly to Wikimedia Commons image URLs (CC BY 2.0, not CC0 — attribution is required and lives in the footer's `.photo-credits` line; don't remove it if you swap photos, or update it to match). No API key or backend needed since these are just `background-image` on plain `<div>`s. `.hero-overlay` is the dark gradient on top that keeps hero text readable regardless of which photo is showing; `collapseHero()` fades the whole background+overlay out once results appear, rather than trying to show a cropped sliver of it behind the compact search bar.
 
 ## Running locally
 
