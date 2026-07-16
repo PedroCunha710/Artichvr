@@ -10,6 +10,10 @@ const els = {
   status: document.getElementById("status"),
   statusText: document.getElementById("status-text"),
   loader: document.getElementById("loader"),
+  loginButton: document.getElementById("login-button"),
+  logoutButton: document.getElementById("logout-button"),
+  userChip: document.getElementById("user-chip"),
+  userName: document.getElementById("user-name"),
 };
 
 const ALBUM_TYPE_LABELS = {
@@ -47,6 +51,39 @@ export function getActiveTypes() {
 
 export function getSortOrder() {
   return els.sortSelect.value;
+}
+
+export function onLoginClick(handler) {
+  els.loginButton.addEventListener("click", handler);
+}
+
+export function onLogoutClick(handler) {
+  els.logoutButton.addEventListener("click", handler);
+}
+
+export function onSaveAlbumClick(handler) {
+  els.albumsGrid.addEventListener("click", (event) => {
+    const button = event.target.closest(".save-button");
+    if (button) handler(button.dataset.albumId, button);
+  });
+}
+
+export function setAlbumSaved(button, isSaved) {
+  button.classList.toggle("is-saved", isSaved);
+  button.textContent = isSaved ? "Saved" : "Save";
+}
+
+export function showLoggedOut() {
+  document.body.classList.remove("logged-in");
+  els.loginButton.hidden = false;
+  els.userChip.hidden = true;
+}
+
+export function showLoggedIn(displayName) {
+  document.body.classList.add("logged-in");
+  els.loginButton.hidden = true;
+  els.userChip.hidden = false;
+  els.userName.textContent = displayName;
 }
 
 export function showLoading() {
@@ -110,16 +147,21 @@ function albumCardHtml(album) {
   const cover = album.images[0]?.url ?? "";
   const year = new Date(album.release_date).getFullYear();
   const type = ALBUM_TYPE_LABELS[album.album_type] ?? album.album_type;
+  const savedClass = album.isSaved ? " is-saved" : "";
+  const savedLabel = album.isSaved ? "Saved" : "Save";
 
   return `
-    <a class="album-card" href="${album.external_urls.spotify}" target="_blank" rel="noopener">
-      <img src="${cover}" alt="${escapeHtml(album.name)}" loading="lazy" />
-      <div class="album-info">
-        <h3>${escapeHtml(album.name)}</h3>
-        <p>${year} • ${type}</p>
-        <p>${album.total_tracks} tracks</p>
-      </div>
-    </a>
+    <div class="album-card">
+      <a class="album-card-link" href="${album.external_urls.spotify}" target="_blank" rel="noopener">
+        <img src="${cover}" alt="${escapeHtml(album.name)}" loading="lazy" />
+        <div class="album-info">
+          <h3>${escapeHtml(album.name)}</h3>
+          <p>${year} • ${type}</p>
+          <p>${album.total_tracks} tracks</p>
+        </div>
+      </a>
+      <button type="button" class="save-button${savedClass}" data-album-id="${album.id}">${savedLabel}</button>
+    </div>
   `;
 }
 

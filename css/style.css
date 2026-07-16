@@ -26,8 +26,66 @@ a {
 }
 
 .site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   padding: 1.25rem 2rem;
   background: var(--bg-elevated);
+}
+
+.auth-area {
+  display: flex;
+  align-items: center;
+}
+
+.login-button {
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.login-button:hover {
+  background: var(--accent);
+  color: #000;
+}
+
+.login-button[hidden] {
+  display: none;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.user-chip[hidden] {
+  display: none;
+}
+
+.logout-button {
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #2a2a2a;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.logout-button:hover {
+  border-color: var(--accent);
+  color: var(--text);
 }
 
 .logo {
@@ -344,8 +402,8 @@ main {
   background: var(--bg-card);
   border-radius: var(--radius);
   overflow: hidden;
-  text-decoration: none;
-  color: var(--text);
+  display: flex;
+  flex-direction: column;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -354,7 +412,12 @@ main {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
-.album-card img {
+.album-card-link {
+  text-decoration: none;
+  color: var(--text);
+}
+
+.album-card-link img {
   width: 100%;
   aspect-ratio: 1 / 1;
   object-fit: cover;
@@ -363,6 +426,40 @@ main {
 
 .album-info {
   padding: 0.75rem;
+}
+
+.save-button {
+  display: none;
+  margin: 0 0.75rem 0.75rem;
+  padding: 0.4rem 0;
+  border-radius: 999px;
+  border: 1px solid #2a2a2a;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+body.logged-in .save-button {
+  display: block;
+}
+
+.save-button:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.save-button.is-saved {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+}
+
+.save-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 .album-info h3 {

@@ -17,14 +17,15 @@ Personal project built to demonstrate REST API consumption, DOM manipulation, an
 - Search for an artist by name
 - Lists all albums, singles, and compilations
 - For each album: cover art, name, release date, track count, type, and a direct link to Spotify
+- Sort by release date and filter by album type
+- Log in with Spotify to save/remove albums to your own library, right from the app
 - Responsive UI with a dark theme
 - Loading and error states
 
 ### Planned extras
 
 - Real-time search
-- Sort by date and filter by album type
-- Search history (localStorage) and favorites
+- Search history (localStorage)
 
 ## Tech stack
 
@@ -43,9 +44,10 @@ Artichvr/
 ├── css/
 │   └── style.css
 ├── js/
-│   ├── api.js              # Spotify API calls + authentication
+│   ├── api.js              # Spotify API calls (public + user-scoped)
+│   ├── auth.js              # user login (Authorization Code + PKCE)
 │   ├── ui.js                # DOM rendering
-│   ├── app.js                # wires api.js and ui.js together
+│   ├── app.js                # wires api.js, auth.js and ui.js together
 │   ├── config.js             # real credentials (not committed)
 │   └── config.example.js     # configuration template
 ├── assets/
@@ -68,18 +70,19 @@ Or use the VS Code **Live Server** extension.
 ## Configuring the Spotify API
 
 1. Create an app at [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) and get your **Client ID** and **Client Secret**.
-2. Copy the configuration template:
+2. In the app's **Settings**, add a **Redirect URI** matching exactly where you'll open the app locally, e.g. `http://127.0.0.1:5500/` (trailing slash included) — this is required for the "Log in with Spotify" button to work, even though the app has no backend.
+3. Copy the configuration template:
    ```bash
    cp js/config.example.js js/config.js
    ```
-3. Fill in `js/config.js` with your credentials:
+4. Fill in `js/config.js` with your credentials:
    ```js
    export const CLIENT_ID = "your-client-id";
    export const CLIENT_SECRET = "your-client-secret";
    ```
-4. `js/config.js` is in `.gitignore` — never commit your credentials.
+5. `js/config.js` is in `.gitignore` — never commit your credentials.
 
-> ⚠️ This project uses the **Client Credentials Flow** directly in the browser (no backend), so the Client Secret is exposed in client-side code. That's acceptable for a demo project with public data and no user login; it's not the recommended pattern for a production app handling sensitive data.
+> ⚠️ Search and album browsing use the **Client Credentials Flow** directly in the browser (no backend), so the Client Secret is exposed in client-side code. That's acceptable for a demo project with public data; it's not the recommended pattern for a production app handling real secrets. Logging in and saving albums use a separate **Authorization Code + PKCE** flow instead, which needs no client secret and is the correct pattern for user-facing actions in a backend-less app.
 
 ## License
 
