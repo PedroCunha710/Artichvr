@@ -1,3 +1,12 @@
+import { isMockMode } from "./mock.js";
+
+if (isMockMode()) {
+  const badge = document.createElement("div");
+  badge.className = "mock-badge";
+  badge.textContent = "Mock data";
+  document.body.appendChild(badge);
+}
+
 const els = {
   form: document.getElementById("search-form"),
   input: document.getElementById("search-input"),
@@ -7,7 +16,12 @@ const els = {
   albumsGrid: document.getElementById("albums-grid"),
   albumsEmpty: document.getElementById("albums-empty"),
   filterPills: Array.from(document.querySelectorAll(".filter-pill")),
-  sortSelect: document.getElementById("sort-select"),
+  clearFiltersButton: document.getElementById("clear-filters-button"),
+  decadePills: document.getElementById("decade-pills"),
+  sortButton: document.getElementById("sort-button"),
+  sortMenu: document.getElementById("sort-menu"),
+  sortLabel: document.getElementById("sort-label"),
+  toast: document.getElementById("toast"),
   status: document.getElementById("status"),
   statusText: document.getElementById("status-text"),
   loader: document.getElementById("loader"),
@@ -176,9 +190,55 @@ export function onFilterChange(handler) {
   });
 }
 
-export function onSortChange(handler) {
-  els.sortSelect.addEventListener("change", handler);
+export function onClearFilters(handler) {
+  els.clearFiltersButton.addEventListener("click", () => {
+    els.filterPills.forEach((pill) => pill.classList.add("is-active"));
+    setActiveDecade("all");
+    handler();
+  });
 }
+
+let sortOrder = "newest";
+const SORT_LABELS = { newest: "Newest first", oldest: "Oldest first" };
+
+export function onSortChange(handler) {
+  els.sortButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const isOpen = !els.sortMenu.hidden;
+    isOpen ? closeSortMenu() : openSortMenu();
+  });
+
+  els.sortMenu.addEventListener("click", (event) => {
+    const item = event.target.closest(".sort-item");
+    if (!item) return;
+
+    sortOrder = item.dataset.sort;
+    els.sortLabel.textContent = SORT_LABELS[sortOrder];
+    Array.from(els.sortMenu.children).forEach((child) => {
+      child.classList.toggle("is-active", child === item);
+    });
+    closeSortMenu();
+    handler();
+  });
+}
+
+function openSortMenu() {
+  els.sortMenu.hidden = false;
+  els.sortButton.setAttribute("aria-expanded", "true");
+}
+
+function closeSortMenu() {
+  els.sortMenu.hidden = true;
+  els.sortButton.setAttribute("aria-expanded", "false");
+}
+
+document.addEventListener("click", (event) => {
+  if (!els.sortMenu.hidden && !event.target.closest(".sort-dropdown")) closeSortMenu();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeSortMenu();
+});
 
 export function getActiveTypes() {
   return els.filterPills
@@ -186,8 +246,49 @@ export function getActiveTypes() {
     .map((pill) => pill.dataset.type);
 }
 
+let activeDecade = "all";
+
+export function renderDecadePills(decades) {
+  activeDecade = "all";
+
+  if (decades.length === 0) {
+    els.decadePills.hidden = true;
+    els.decadePills.innerHTML = "";
+    return;
+  }
+
+  els.decadePills.innerHTML =
+    `<button type="button" class="decade-pill is-active" data-decade="all">All</button>` +
+    decades
+      .map((decade) => `<button type="button" class="decade-pill" data-decade="${decade}">${decade}s</button>`)
+      .join("");
+
+  els.decadePills.hidden = false;
+}
+
+function setActiveDecade(decade) {
+  activeDecade = decade;
+  Array.from(els.decadePills.children).forEach((pill) => {
+    pill.classList.toggle("is-active", pill.dataset.decade === decade);
+  });
+}
+
+export function onDecadeChange(handler) {
+  els.decadePills.addEventListener("click", (event) => {
+    const pill = event.target.closest(".decade-pill");
+    if (!pill) return;
+
+    setActiveDecade(pill.dataset.decade);
+    handler();
+  });
+}
+
+export function getActiveDecade() {
+  return activeDecade;
+}
+
 export function getSortOrder() {
-  return els.sortSelect.value;
+  return sortOrder;
 }
 
 export function onLoginClick(handler) {
@@ -219,6 +320,31 @@ export function setAlbumSaved(button, isSaved) {
   button.classList.toggle("is-saved", isSaved);
   button.textContent = isSaved ? "Saved" : "Save";
   gsap.fromTo(button, { scale: 1 }, { scale: 1.12, duration: 0.12, yoyo: true, repeat: 1, ease: "power1.inOut" });
+}
+
+const TOAST_VISIBLE_MS = 2500;
+let toastHideTimer = null;
+
+export function showToast(message, variant = "success") {
+  clearTimeout(toastHideTimer);
+  gsap.killTweensOf(els.toast);
+
+  els.toast.textContent = message;
+  els.toast.classList.toggle("is-error", variant === "error");
+  els.toast.hidden = false;
+  gsap.fromTo(els.toast, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" });
+
+  toastHideTimer = setTimeout(() => {
+    gsap.to(els.toast, {
+      opacity: 0,
+      y: 16,
+      duration: 0.3,
+      ease: "power2.in",
+      onComplete: () => {
+        els.toast.hidden = true;
+      },
+    });
+  }, TOAST_VISIBLE_MS);
 }
 
 export function showLoggedOut() {

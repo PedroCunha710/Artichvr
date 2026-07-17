@@ -18,6 +18,10 @@ import {
   clearSuggestions,
   onSuggestionSelect,
   onFilterChange,
+  onClearFilters,
+  renderDecadePills,
+  onDecadeChange,
+  getActiveDecade,
   onSortChange,
   getActiveTypes,
   getSortOrder,
@@ -26,6 +30,7 @@ import {
   onHistoryClick,
   onSaveAlbumClick,
   setAlbumSaved,
+  showToast,
   showLoggedIn,
   showLoggedOut,
   showLoading,
@@ -78,6 +83,7 @@ async function runSearch(resolveArtist, notFoundMessage) {
     addToSearchHistory(artist);
     currentAlbums = albums.map((album) => ({ ...album, isSaved: false }));
     renderArtist(artist);
+    renderDecadePills(getAvailableDecades());
     renderAlbums(applyAlbumsView());
     clearStatus();
 
@@ -91,6 +97,8 @@ async function runSearch(resolveArtist, notFoundMessage) {
 }
 
 onFilterChange(() => renderAlbums(applyAlbumsView()));
+onClearFilters(() => renderAlbums(applyAlbumsView()));
+onDecadeChange(() => renderAlbums(applyAlbumsView()));
 onSortChange(() => renderAlbums(applyAlbumsView()));
 
 onLoginClick(() => redirectToLogin());
@@ -114,13 +122,16 @@ onSaveAlbumClick(async (albumId, button) => {
     if (album.isSaved) {
       await removeSavedAlbum(albumId, token);
       album.isSaved = false;
+      setAlbumSaved(button, false);
+      showToast(`Removed "${album.name}" from your library.`);
     } else {
       await saveAlbum(albumId, token);
       album.isSaved = true;
+      setAlbumSaved(button, true);
+      showToast(`Saved "${album.name}" to your library.`);
     }
-    setAlbumSaved(button, album.isSaved);
   } catch (error) {
-    console.error(error);
+    showToast(error.message || "Something went wrong.", "error");
   } finally {
     button.disabled = false;
   }
@@ -165,12 +176,27 @@ async function markAlreadySavedAlbums() {
 
 function applyAlbumsView() {
   const activeTypes = new Set(getActiveTypes());
-  const filtered = currentAlbums.filter((album) => activeTypes.has(album.album_type));
+  const activeDecade = getActiveDecade();
+
+  const filtered = currentAlbums.filter((album) => {
+    if (!activeTypes.has(album.album_type)) return false;
+    if (activeDecade === "all") return true;
+    return String(decadeOf(album.release_date)) === activeDecade;
+  });
 
   const sortDirection = getSortOrder() === "oldest" ? -1 : 1;
   return [...filtered].sort(
     (a, b) => sortDirection * (new Date(b.release_date) - new Date(a.release_date))
   );
+}
+
+function getAvailableDecades() {
+  const decades = new Set(currentAlbums.map((album) => decadeOf(album.release_date)));
+  return [...decades].sort((a, b) => b - a);
+}
+
+function decadeOf(releaseDate) {
+  return Math.floor(new Date(releaseDate).getFullYear() / 10) * 10;
 }
 
 function waitForMinimumLoading(startedAt) {

@@ -1,4 +1,5 @@
 import { CLIENT_ID, CLIENT_SECRET } from "./config.js";
+import { isMockMode, MOCK_SUGGESTIONS, MOCK_ALBUMS, MOCK_PROFILE, mockCheckSaved, mockSave, mockRemove } from "./mock.js";
 
 const TOKEN_URL = "https://accounts.spotify.com/api/token";
 const BASE_URL = "https://api.spotify.com/v1";
@@ -63,6 +64,14 @@ async function spotifyFetch(url, attempt = 0) {
 }
 
 export async function searchArtists(name, limit = 6) {
+  if (isMockMode()) {
+    await wait(300);
+    const matches = MOCK_SUGGESTIONS.filter((artist) => artist.name.toLowerCase().includes(name.toLowerCase()));
+    // Any query text is a valid test input, not just the three fixture names -
+    // fall back to showing them all rather than a dead-end "not found" state.
+    return (matches.length > 0 ? matches : MOCK_SUGGESTIONS).slice(0, limit);
+  }
+
   const url = `${BASE_URL}/search?q=${encodeURIComponent(name)}&type=artist&limit=${limit}`;
   const data = await spotifyFetch(url);
   return data.artists.items;
@@ -74,6 +83,11 @@ export async function searchArtist(name) {
 }
 
 export async function getArtistAlbums(artistId) {
+  if (isMockMode()) {
+    await wait(400);
+    return dedupeAlbums(MOCK_ALBUMS);
+  }
+
   const albums = [];
   // Docs say limit can go up to 50, but dev-mode apps get "Invalid limit" above 10; pagination via `next` covers the rest.
   let url = `${BASE_URL}/artists/${artistId}/albums?include_groups=album,single,compilation&limit=10&market=US`;
@@ -104,29 +118,58 @@ function dedupeAlbums(albums) {
 // The functions below act on behalf of a logged-in user, so they take a user
 // access token (from auth.js) rather than the app-level token above.
 
+// Spotify's error responses carry the real reason (e.g. "Insufficient client
+// scope", a 403 from Development Mode's user allowlist) in the JSON body, so
+// surface it instead of a generic message - it's the fastest way to tell a
+// scope/allowlist problem apart from a rate limit or a network failure.
+async function describeError(response) {
+  try {
+    const body = await response.json();
+    return body?.error?.message ? `${response.status}: ${body.error.message}` : String(response.status);
+  } catch {
+    return String(response.status);
+  }
+}
+
 export async function getCurrentUserProfile(userToken) {
+  if (isMockMode()) return MOCK_PROFILE;
+
   const response = await fetch(`${BASE_URL}/me`, {
     headers: { Authorization: `Bearer ${userToken}` },
   });
 
   if (!response.ok) {
-    throw new Error("Could not load your Spotify profile.");
+    throw new Error(`Could not load your Spotify profile (${await describeError(response)}).`);
   }
 
   return response.json();
 }
 
+// Spotify's February 2026 Dev Mode changes removed the content-specific
+// PUT/DELETE /me/albums and GET /me/albums/contains endpoints (they now 403
+// unconditionally, scope notwithstanding) in favor of one generic library
+// endpoint keyed by Spotify URI ("spotify:album:{id}") instead of a bare ID.
+function albumUri(albumId) {
+  return encodeURIComponent(`spotify:album:${albumId}`);
+}
+
 export async function checkAlbumsSaved(albumIds, userToken) {
+  if (isMockMode()) {
+    await wait(200);
+    return mockCheckSaved(albumIds);
+  }
+
   const results = [];
 
-  for (let i = 0; i < albumIds.length; i += 50) {
-    const chunk = albumIds.slice(i, i + 50);
-    const response = await fetch(`${BASE_URL}/me/albums/contains?ids=${chunk.join(",")}`, {
+  for (let i = 0; i < albumIds.length; i += 40) {
+    const chunk = albumIds.slice(i, i + 40);
+    const uris = chunk.map(albumUri).join(",");
+    const response = await fetch(`${BASE_URL}/me/library/contains?uris=${uris}`, {
       headers: { Authorization: `Bearer ${userToken}` },
     });
 
     if (!response.ok) {
-      throw new Error("Could not check which albums are already saved.");
+      throw new Error(`Could not check which albums are already saved (${await describeError(response)}).`);
     }
 
     results.push(...(await response.json()));
@@ -136,23 +179,33 @@ export async function checkAlbumsSaved(albumIds, userToken) {
 }
 
 export async function saveAlbum(albumId, userToken) {
-  const response = await fetch(`${BASE_URL}/me/albums?ids=${albumId}`, {
+  if (isMockMode()) {
+    await wait(200);
+    return mockSave(albumId);
+  }
+
+  const response = await fetch(`${BASE_URL}/me/library?uris=${albumUri(albumId)}`, {
     method: "PUT",
     headers: { Authorization: `Bearer ${userToken}` },
   });
 
   if (!response.ok) {
-    throw new Error("Could not save this album to your library.");
+    throw new Error(`Could not save this album to your library (${await describeError(response)}).`);
   }
 }
 
 export async function removeSavedAlbum(albumId, userToken) {
-  const response = await fetch(`${BASE_URL}/me/albums?ids=${albumId}`, {
+  if (isMockMode()) {
+    await wait(200);
+    return mockRemove(albumId);
+  }
+
+  const response = await fetch(`${BASE_URL}/me/library?uris=${albumUri(albumId)}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${userToken}` },
   });
 
   if (!response.ok) {
-    throw new Error("Could not remove this album from your library.");
+    throw new Error(`Could not remove this album from your library (${await describeError(response)}).`);
   }
 }

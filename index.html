@@ -171,15 +171,32 @@
       </div>
       <section id="artist-card" class="artist-card"></section>
       <div id="albums-toolbar" class="albums-toolbar" hidden>
-        <div class="filter-pills" role="group" aria-label="Filter by album type">
-          <button type="button" class="filter-pill is-active" data-type="album">Albums</button>
-          <button type="button" class="filter-pill is-active" data-type="single">Singles</button>
-          <button type="button" class="filter-pill is-active" data-type="compilation">Compilations</button>
+        <div class="toolbar-row">
+          <div class="filter-pills" role="group" aria-label="Filter by album type">
+            <button type="button" class="filter-pill is-active" data-type="album">Albums</button>
+            <button type="button" class="filter-pill is-active" data-type="single">Singles</button>
+            <button type="button" class="filter-pill is-active" data-type="compilation">Compilations</button>
+            <button type="button" id="clear-filters-button" class="clear-filters-button">Clear</button>
+          </div>
+          <div class="sort-dropdown">
+            <button
+              id="sort-button"
+              type="button"
+              class="sort-trigger"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-label="Sort albums by release date"
+            >
+              <span id="sort-label">Newest first</span>
+              <span class="care" aria-hidden="true">▾</span>
+            </button>
+            <div id="sort-menu" class="sort-menu" hidden>
+              <button type="button" class="sort-item is-active" data-sort="newest">Newest first</button>
+              <button type="button" class="sort-item" data-sort="oldest">Oldest first</button>
+            </div>
+          </div>
         </div>
-        <select id="sort-select" class="sort-select" aria-label="Sort albums by release date">
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-        </select>
+        <div id="decade-pills" class="decade-pills" role="group" aria-label="Filter by decade" hidden></div>
       </div>
       <p id="albums-empty" class="albums-empty" hidden>No albums match the selected filters.</p>
       <section id="albums-grid" class="albums-grid"></section>
@@ -203,6 +220,8 @@
         Wikimedia Commons.
       </p>
     </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script type="module" src="js/app.js"></script>

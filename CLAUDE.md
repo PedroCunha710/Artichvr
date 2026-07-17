@@ -22,6 +22,7 @@ css/style.css      # dark theme by default, Spotify green accents (#121212 / #1d
 js/api.js          # all Spotify API calls (app-level + user-level), auth token handling
 js/auth.js         # user login: PKCE Authorization Code flow, token storage/refresh
 js/history.js      # recent-searches list, persisted to localStorage
+js/mock.js         # dev-only fixture data + mock-mode toggle, see "Mock mode" below
 js/ui.js           # DOM rendering, no fetch calls here
 js/app.js          # entry point, wires ui.js events to api.js/auth.js calls
 js/config.js       # gitignored — real credentials, created from config.example.js
@@ -39,6 +40,8 @@ Two separate flows, for two separate purposes:
 - **Authorization Code + PKCE** (`js/auth.js`) — user login, needed for anything done *as* the user (currently: saving/removing albums in their library, scopes `user-library-modify`/`user-library-read`). PKCE needs no client secret, so it's safe as a pure-frontend flow. Access + refresh tokens are kept in `localStorage`; the redirect URI is computed at runtime (`location.origin + location.pathname`) and must exactly match one registered in the Spotify dashboard, so the app must be opened at that exact URL (trailing slash included) for login to work.
 
 Credentials live in `js/config.js`, which is gitignored. `js/config.example.js` is the template committed to the repo.
+
+Spotify's February 2026 Dev Mode changes removed the old content-specific library endpoints (`PUT`/`DELETE /me/albums`, `GET /me/albums/contains`) — they now 403 unconditionally regardless of scope. `js/api.js` uses the replacement generic endpoint (`/me/library`, `/me/library/contains`), which is keyed by full Spotify URI (`spotify:album:{id}`) rather than a bare ID; see `albumUri()`.
 
 ## Animation
 
@@ -59,6 +62,10 @@ Colors live as CSS custom properties on `:root` (dark, the default) with overrid
 
 The SVG turntable/vinyl icons (header logo, loader, error state) keep their hardcoded dark fills in both themes — they're meant to look like an actual black vinyl record, not UI chrome that should invert.
 
+## Mock mode
+
+Spotify's Development Mode rate limit is easy to burn through while iterating on UI (filters, theme, save flow), and once tripped it can block real catalog reads for hours. `js/mock.js` provides a bypass: open the app with `?mock=1` in the URL (persists in `localStorage.artichvr_mock` until you visit with `?mock=0`) to route `api.js`'s functions to fixture data instead of `fetch`, and `auth.js`'s login/logout to a fake session (`isMockLoggedIn`/`setMockLoggedIn`) instead of the real PKCE flow — the whole app (search, filters, decades, save/toast, history) becomes testable offline, no Spotify calls at all. A red "Mock data" badge (`ui.js`, `.mock-badge`) stays on screen the whole time so mock output is never mistaken for a real search result. Extend `MOCK_ALBUMS`/`MOCK_SUGGESTIONS` in `mock.js` if a feature needs different fixture data to exercise.
+
 ## Running locally
 
 Needs to be served over HTTP (ES modules and the Spotify token request don't work over `file://`). Any static server works, e.g. `npx serve` or VS Code's Live Server.
@@ -71,4 +78,8 @@ Needs to be served over HTTP (ES modules and the Spotify token request don't wor
 
 ## Roadmap (not yet built)
 
-Nothing outstanding right now. Sort/filter by album type, "save to your Spotify library" (login required), search-as-you-type suggestions, search history, and the light/dark theme toggle are all already built.
+Nothing outstanding right now. Sort/filter by album type and decade, "save to your Spotify library" (login required) with a toast confirming the save/remove, search-as-you-type suggestions, search history, and the light/dark theme toggle are all already built.
+
+The decade pills (`js/app.js`, `getAvailableDecades`) are computed from whatever discography just loaded, not a fixed list — an artist with only 2010s–2020s releases won't show a `2000s` pill. `renderDecadePills` resets the selection to "All" on every new search.
+
+The sort control (`#sort-button`/`#sort-menu` in `ui.js`) is a hand-built dropdown, not a native `<select>` — a native select's closed state can be themed but its open option list is drawn by the OS and ignores the page's CSS entirely, which broke the dark theme. Same floating-menu pattern as the profile dropdown (`#user-menu`): toggle on click, close on outside click/Escape.
