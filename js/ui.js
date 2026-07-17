@@ -11,6 +11,7 @@ const els = {
   status: document.getElementById("status"),
   statusText: document.getElementById("status-text"),
   loader: document.getElementById("loader"),
+  themeToggleButton: document.getElementById("theme-toggle-button"),
   loginButton: document.getElementById("login-button"),
   historyButton: document.getElementById("history-button"),
   logoutButton: document.getElementById("logout-button"),
@@ -27,6 +28,16 @@ const ALBUM_TYPE_LABELS = {
   single: "Single",
   compilation: "Compilation",
 };
+
+const THEME_STORAGE_KEY = "artichvr_theme";
+
+// The initial theme is already set on <html> by an inline script in index.html's
+// <head>, before this module loads, so the page never flashes the wrong theme.
+els.themeToggleButton.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem(THEME_STORAGE_KEY, next);
+});
 
 // gsap is loaded globally via a <script> tag in index.html (no bundler in this project).
 let vinylTimeline = null;

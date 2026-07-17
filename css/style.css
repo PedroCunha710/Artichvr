@@ -6,7 +6,30 @@
   --text-muted: #b3b3b3;
   --accent: #1db954;
   --accent-hover: #1ed760;
+  --border: #2a2a2a;
+  --border-strong: #4a4a4a;
+  --surface-hover: #2a2a2a;
+  --input-bg: #2a2a2a;
+  --suggestion-bg: rgba(51, 51, 51, 0.55);
+  --suggestion-hover-bg: #454545;
+  --header-bg: rgba(24, 24, 24, 0.7);
   --radius: 8px;
+}
+
+:root[data-theme="light"] {
+  --bg: #f7f7f7;
+  --bg-elevated: #ffffff;
+  --bg-card: #ffffff;
+  --text: #121212;
+  --text-muted: #5c5c5c;
+  --accent-hover: #17a94b;
+  --border: #dcdcdc;
+  --border-strong: #bfbfbf;
+  --surface-hover: #ececec;
+  --input-bg: #ffffff;
+  --suggestion-bg: rgba(255, 255, 255, 0.9);
+  --suggestion-hover-bg: #ececec;
+  --header-bg: rgba(255, 255, 255, 0.75);
 }
 
 * {
@@ -36,7 +59,7 @@ a {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(24, 24, 24, 0.7);
+  background: var(--header-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -45,6 +68,38 @@ a {
 .auth-area {
   display: flex;
   align-items: center;
+}
+
+.theme-toggle-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-right: 0.5rem;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.theme-toggle-button:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.theme-toggle-button .icon-moon {
+  display: none;
+}
+
+[data-theme="light"] .theme-toggle-button .icon-sun {
+  display: none;
+}
+
+[data-theme="light"] .theme-toggle-button .icon-moon {
+  display: block;
 }
 
 .login-button {
@@ -92,7 +147,7 @@ a {
 
 .user-menu-button:hover,
 .user-menu-button[aria-expanded="true"] {
-  border-color: #2a2a2a;
+  border-color: var(--border);
   background: var(--bg-card);
 }
 
@@ -128,7 +183,7 @@ a {
   min-width: 140px;
   padding: 0.4rem;
   border-radius: var(--radius);
-  border: 1px solid #2a2a2a;
+  border: 1px solid var(--border);
   background: var(--bg-card);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   z-index: 10;
@@ -152,7 +207,7 @@ a {
 }
 
 .menu-item:hover {
-  background: #2a2a2a;
+  background: var(--surface-hover);
   color: var(--text);
 }
 
@@ -241,6 +296,7 @@ body.has-results .hero {
 
 .hero-title {
   margin: 0 0 1rem;
+  color: #ffffff;
   font-size: clamp(1.75rem, 5vw, 3rem);
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -249,7 +305,7 @@ body.has-results .hero {
 
 .hero-subtitle {
   margin: 0;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.75);
   font-size: 1.05rem;
   line-height: 1.6;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.8);
@@ -271,8 +327,8 @@ body.has-results .hero {
   width: 100%;
   padding: 1rem 1.5rem;
   border-radius: 999px;
-  border: 1px solid #2a2a2a;
-  background: #2a2a2a;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
   color: var(--text);
   font-size: 1.05rem;
 }
@@ -294,8 +350,8 @@ body.has-results .hero {
   list-style: none;
   text-align: left;
   border-radius: 16px;
-  border: 1px solid #4a4a4a;
-  background: rgba(51, 51, 51, 0.55);
+  border: 1px solid var(--border-strong);
+  background: var(--suggestion-bg);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
@@ -333,7 +389,7 @@ body.has-results .hero {
 
 .search-suggestion:hover,
 .search-suggestion:focus-visible {
-  background: #454545;
+  background: var(--suggestion-hover-bg);
 }
 
 .search-suggestion img {
@@ -341,7 +397,7 @@ body.has-results .hero {
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  background: #2a2a2a;
+  background: var(--surface-hover);
   flex-shrink: 0;
 }
 
@@ -470,7 +526,7 @@ main {
 .filter-pill {
   padding: 0.4rem 0.9rem;
   border-radius: 999px;
-  border: 1px solid #2a2a2a;
+  border: 1px solid var(--border);
   background: transparent;
   color: var(--text-muted);
   font-size: 0.85rem;
@@ -488,8 +544,8 @@ main {
 .sort-select {
   padding: 0.5rem 0.9rem;
   border-radius: 999px;
-  border: 1px solid #2a2a2a;
-  background: #2a2a2a;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
   color: var(--text);
   font-size: 0.85rem;
   cursor: pointer;
@@ -550,7 +606,7 @@ main {
   margin: 0 0.75rem 0.75rem;
   padding: 0.4rem 0;
   border-radius: 999px;
-  border: 1px solid #2a2a2a;
+  border: 1px solid var(--border);
   background: transparent;
   color: var(--text-muted);
   font-size: 0.8rem;
