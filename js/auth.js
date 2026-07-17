@@ -1,4 +1,5 @@
 import { CLIENT_ID } from "./config.js";
+import { isMockMode, isMockLoggedIn, setMockLoggedIn } from "./mock.js";
 
 const AUTHORIZE_URL = "https://accounts.spotify.com/authorize";
 const TOKEN_URL = "https://accounts.spotify.com/api/token";
@@ -37,6 +38,12 @@ function base64UrlEncode(buffer) {
 }
 
 export async function redirectToLogin() {
+  if (isMockMode()) {
+    setMockLoggedIn(true);
+    window.location.reload();
+    return;
+  }
+
   const verifier = generateRandomString(64);
   const challenge = await generateCodeChallenge(verifier);
   localStorage.setItem(STORAGE_KEYS.verifier, verifier);
@@ -117,6 +124,8 @@ async function refreshAccessToken() {
 }
 
 export async function getUserAccessToken() {
+  if (isMockMode()) return isMockLoggedIn() ? "mock-token" : null;
+
   const token = localStorage.getItem(STORAGE_KEYS.accessToken);
   if (!token) return null;
 
@@ -127,10 +136,16 @@ export async function getUserAccessToken() {
 }
 
 export function isLoggedIn() {
+  if (isMockMode()) return isMockLoggedIn();
   return Boolean(localStorage.getItem(STORAGE_KEYS.accessToken));
 }
 
 export function logout() {
+  if (isMockMode()) {
+    setMockLoggedIn(false);
+    return;
+  }
+
   localStorage.removeItem(STORAGE_KEYS.accessToken);
   localStorage.removeItem(STORAGE_KEYS.refreshToken);
   localStorage.removeItem(STORAGE_KEYS.expiresAt);
