@@ -1,3 +1,12 @@
+/**
+ * @fileoverview All Spotify Web API calls, both app-level (Client
+ * Credentials — public catalog search/browse) and user-level (the caller
+ * supplies a user access token from `auth.js` for library reads/writes).
+ * No DOM access here; see `ui.js` for rendering and `app.js` for wiring
+ * the two together. Every exported function checks `mock.js`'s mock mode
+ * first and, if active, returns fixture data instead of calling `fetch`.
+ */
+
 import { CLIENT_ID, CLIENT_SECRET } from "./config.js";
 import { isMockMode, MOCK_SUGGESTIONS, MOCK_ALBUMS, MOCK_PROFILE, mockCheckSaved, mockSave, mockRemove } from "./mock.js";
 
@@ -7,6 +16,16 @@ const BASE_URL = "https://api.spotify.com/v1";
 let accessToken = null;
 let tokenExpiresAt = 0;
 
+/**
+ * Returns a valid app-level access token for public catalog reads (search,
+ * artist albums), fetching a new one via the Client Credentials flow if the
+ * cached token has expired. The Client Secret is bundled into this
+ * front-end file and technically exposed — a deliberate trade-off,
+ * acceptable for read-only public data with no user login involved.
+ *
+ * @returns {Promise<string>} The app-level access token.
+ * @throws {Error} If Spotify rejects the credentials request.
+ */
 async function getAccessToken() {
   if (accessToken && Date.now() < tokenExpiresAt) {
     return accessToken;
@@ -35,10 +54,29 @@ const MAX_RATE_LIMIT_RETRIES = 4;
 const RATE_LIMIT_BACKOFF_MS = 3000;
 const PAGINATION_DELAY_MS = 300;
 
+/**
+ * Resolves after the given delay. Used to space out paginated requests and
+ * to back off between rate-limit retries.
+ *
+ * @param {number} ms - Milliseconds to wait.
+ * @returns {Promise<void>}
+ */
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Fetches a Spotify catalog endpoint with the app-level token attached,
+ * retrying with a fixed, increasing backoff on 429 (rate limited) responses
+ * before giving up.
+ *
+ * @param {string} url - Full Spotify API URL to fetch.
+ * @param {number} [attempt=0] - Current retry attempt, used internally for
+ *   the recursive backoff; callers should omit it.
+ * @returns {Promise<object>} The parsed JSON response body.
+ * @throws {Error} If the response is a non-retryable error, or all retries
+ *   are exhausted while rate-limited.
+ */
 async function spotifyFetch(url, attempt = 0) {
   const token = await getAccessToken();
   const response = await fetch(url, {
@@ -63,12 +101,21 @@ async function spotifyFetch(url, attempt = 0) {
   return response.json();
 }
 
+/**
+ * Searches for artists by name.
+ *
+ * @param {string} name - Free-text artist name query.
+ * @param {number} [limit=6] - Maximum number of results.
+ * @returns {Promise<object[]>} Matching Spotify artist objects, most
+ *   relevant first. In mock mode, filters the fixture artists by
+ *   case-insensitive substring match, falling back to all of them if
+ *   nothing matches — any query text is a valid test input, not just the
+ *   three fixture names.
+ */
 export async function searchArtists(name, limit = 6) {
   if (isMockMode()) {
     await wait(300);
     const matches = MOCK_SUGGESTIONS.filter((artist) => artist.name.toLowerCase().includes(name.toLowerCase()));
-    // Any query text is a valid test input, not just the three fixture names -
-    // fall back to showing them all rather than a dead-end "not found" state.
     return (matches.length > 0 ? matches : MOCK_SUGGESTIONS).slice(0, limit);
   }
 
@@ -77,11 +124,26 @@ export async function searchArtists(name, limit = 6) {
   return data.artists.items;
 }
 
+/**
+ * Searches for a single best-matching artist by name.
+ *
+ * @param {string} name - Free-text artist name query.
+ * @returns {Promise<object|null>} The top matching Spotify artist object,
+ *   or `null` if nothing matched.
+ */
 export async function searchArtist(name) {
   const results = await searchArtists(name, 1);
   return results[0] ?? null;
 }
 
+/**
+ * Fetches an artist's full discography (albums, singles, and
+ * compilations), paginating through all result pages and removing
+ * duplicate releases (e.g. regional re-issues of the same album).
+ *
+ * @param {string} artistId - Spotify artist ID.
+ * @returns {Promise<object[]>} Deduplicated album objects, newest first.
+ */
 export async function getArtistAlbums(artistId) {
   if (isMockMode()) {
     await wait(400);
@@ -104,6 +166,14 @@ export async function getArtistAlbums(artistId) {
   return dedupeAlbums(albums);
 }
 
+/**
+ * Removes duplicate albums (same name, case-insensitive — Spotify often
+ * lists the same release multiple times for different markets/editions)
+ * and sorts the result by release date, newest first.
+ *
+ * @param {object[]} albums - Raw album objects, possibly containing duplicates.
+ * @returns {object[]} Deduplicated, sorted album objects.
+ */
 function dedupeAlbums(albums) {
   const seen = new Map();
   for (const album of albums) {
@@ -118,10 +188,17 @@ function dedupeAlbums(albums) {
 // The functions below act on behalf of a logged-in user, so they take a user
 // access token (from auth.js) rather than the app-level token above.
 
-// Spotify's error responses carry the real reason (e.g. "Insufficient client
-// scope", a 403 from Development Mode's user allowlist) in the JSON body, so
-// surface it instead of a generic message - it's the fastest way to tell a
-// scope/allowlist problem apart from a rate limit or a network failure.
+/**
+ * Extracts a human-readable reason from a failed Spotify API response.
+ * Spotify's error bodies carry the real reason (e.g. a scope problem) in
+ * JSON, so surfacing it is the fastest way to tell a permissions issue
+ * apart from a rate limit or a network failure — much more useful than a
+ * bare status code in the UI.
+ *
+ * @param {Response} response - A `fetch` response with `response.ok === false`.
+ * @returns {Promise<string>} `"{status}: {message}"` if Spotify provided a
+ *   message, otherwise just the status code as a string.
+ */
 async function describeError(response) {
   try {
     const body = await response.json();
@@ -131,6 +208,13 @@ async function describeError(response) {
   }
 }
 
+/**
+ * Fetches the logged-in user's Spotify profile.
+ *
+ * @param {string} userToken - User access token from `auth.js`.
+ * @returns {Promise<object>} The Spotify user profile object.
+ * @throws {Error} If the request fails, with Spotify's reason included.
+ */
 export async function getCurrentUserProfile(userToken) {
   if (isMockMode()) return MOCK_PROFILE;
 
@@ -145,14 +229,33 @@ export async function getCurrentUserProfile(userToken) {
   return response.json();
 }
 
-// Spotify's February 2026 Dev Mode changes removed the content-specific
-// PUT/DELETE /me/albums and GET /me/albums/contains endpoints (they now 403
-// unconditionally, scope notwithstanding) in favor of one generic library
-// endpoint keyed by Spotify URI ("spotify:album:{id}") instead of a bare ID.
+/**
+ * Builds the Spotify URI Spotify's library endpoints expect for an album,
+ * URL-encoded for use as a query-string value.
+ *
+ * Spotify's February 2026 Dev Mode changes removed the content-specific
+ * PUT/DELETE /me/albums and GET /me/albums/contains endpoints (they now 403
+ * unconditionally, scope notwithstanding) in favor of one generic library
+ * endpoint keyed by Spotify URI ("spotify:album:{id}") instead of a bare ID.
+ *
+ * @param {string} albumId - Spotify album ID.
+ * @returns {string} URL-encoded `spotify:album:{id}` URI.
+ */
 function albumUri(albumId) {
   return encodeURIComponent(`spotify:album:${albumId}`);
 }
 
+/**
+ * Checks which of the given albums are already saved in the logged-in
+ * user's library, chunking requests to stay under Spotify's 40-URI limit
+ * per call.
+ *
+ * @param {string[]} albumIds - Spotify album IDs to check.
+ * @param {string} userToken - User access token from `auth.js`.
+ * @returns {Promise<boolean[]>} One boolean per input ID, same order,
+ *   `true` if that album is saved.
+ * @throws {Error} If any chunk's request fails, with Spotify's reason included.
+ */
 export async function checkAlbumsSaved(albumIds, userToken) {
   if (isMockMode()) {
     await wait(200);
@@ -178,6 +281,14 @@ export async function checkAlbumsSaved(albumIds, userToken) {
   return results;
 }
 
+/**
+ * Saves an album to the logged-in user's library.
+ *
+ * @param {string} albumId - Spotify album ID to save.
+ * @param {string} userToken - User access token from `auth.js`.
+ * @returns {Promise<void>}
+ * @throws {Error} If the request fails, with Spotify's reason included.
+ */
 export async function saveAlbum(albumId, userToken) {
   if (isMockMode()) {
     await wait(200);
@@ -194,6 +305,14 @@ export async function saveAlbum(albumId, userToken) {
   }
 }
 
+/**
+ * Removes an album from the logged-in user's library.
+ *
+ * @param {string} albumId - Spotify album ID to remove.
+ * @param {string} userToken - User access token from `auth.js`.
+ * @returns {Promise<void>}
+ * @throws {Error} If the request fails, with Spotify's reason included.
+ */
 export async function removeSavedAlbum(albumId, userToken) {
   if (isMockMode()) {
     await wait(200);

@@ -1,3 +1,10 @@
+/**
+ * @fileoverview Entry point: wires `ui.js`'s DOM events to `api.js`/`auth.js`
+ * calls and back. Holds the only piece of application state — the current
+ * artist's albums — and derives what's actually rendered (filtered, sorted)
+ * from it plus whatever `ui.js` reports as the active filter/sort/decade.
+ */
+
 import {
   searchArtist,
   searchArtists,
@@ -44,7 +51,9 @@ import {
 // shows the turntable animation - hold the loading state for a bit so it reads.
 const MIN_LOADING_MS = 1500;
 
+/** @type {object[]} The current artist's full discography, as fetched (unfiltered). */
 let currentAlbums = [];
+/** @type {boolean} Guards against overlapping searches firing concurrently. */
 let isSearching = false;
 
 onSearchSubmit((query) => runSearch(() => searchArtist(query), `No artist found for "${query}".`));
@@ -61,6 +70,21 @@ onSearchInput(async (query) => {
 
 onSearchFocus(() => renderSuggestions(getSearchHistory(), "Recent searches"));
 
+/**
+ * Drives a full search: resolves the target artist, fetches their
+ * discography, and renders the result (or an error/not-found state). Shared
+ * by both the search form (looks the artist up by name) and picking a
+ * suggestion (the artist object is already known).
+ *
+ * Ignores calls while a search is already in flight, and holds the loading
+ * state for at least `MIN_LOADING_MS` so fast responses don't just flash by.
+ *
+ * @param {() => Promise<object|null>} resolveArtist - Resolves to the
+ *   Spotify artist object to search for, or `null` if none was found.
+ * @param {string} [notFoundMessage] - Message shown if `resolveArtist`
+ *   resolves to `null`.
+ * @returns {Promise<void>}
+ */
 async function runSearch(resolveArtist, notFoundMessage) {
   if (isSearching) return;
   isSearching = true;
@@ -140,6 +164,13 @@ onSaveAlbumClick(async (albumId, button) => {
 playIntroAnimation();
 initAuth();
 
+/**
+ * Runs once on page load: completes a pending PKCE login redirect (if any),
+ * then loads and displays the logged-in user's profile, falling back to the
+ * logged-out UI if there's no valid session or the profile fetch fails.
+ *
+ * @returns {Promise<void>}
+ */
 async function initAuth() {
   await handleRedirectCallback();
 
@@ -157,6 +188,14 @@ async function initAuth() {
   }
 }
 
+/**
+ * After a search completes, checks which of the newly loaded albums are
+ * already in the logged-in user's library and updates their Save buttons
+ * accordingly. A no-op while logged out or with no albums loaded; failures
+ * are logged but don't interrupt the rest of the page.
+ *
+ * @returns {Promise<void>}
+ */
 async function markAlreadySavedAlbums() {
   if (!isLoggedIn() || currentAlbums.length === 0) return;
 
@@ -174,6 +213,13 @@ async function markAlreadySavedAlbums() {
   }
 }
 
+/**
+ * Derives what should currently be rendered from `currentAlbums` plus
+ * `ui.js`'s reported filter state: which album types are active, which
+ * decade (if any) is selected, and the chosen sort order.
+ *
+ * @returns {object[]} The filtered, sorted subset of `currentAlbums` to display.
+ */
 function applyAlbumsView() {
   const activeTypes = new Set(getActiveTypes());
   const activeDecade = getActiveDecade();
@@ -190,15 +236,35 @@ function applyAlbumsView() {
   );
 }
 
+/**
+ * Lists the decades actually present in the current discography, so the
+ * decade filter only ever offers choices that will return results.
+ *
+ * @returns {number[]} Decades (e.g. `2010`, `2020`) sorted newest first.
+ */
 function getAvailableDecades() {
   const decades = new Set(currentAlbums.map((album) => decadeOf(album.release_date)));
   return [...decades].sort((a, b) => b - a);
 }
 
+/**
+ * Rounds a release date down to its decade.
+ *
+ * @param {string} releaseDate - An ISO-ish date string (e.g. `"2021-09-02"`).
+ * @returns {number} The decade the date falls in, e.g. `2020`.
+ */
 function decadeOf(releaseDate) {
   return Math.floor(new Date(releaseDate).getFullYear() / 10) * 10;
 }
 
+/**
+ * Returns a promise that resolves once at least `MIN_LOADING_MS` has
+ * elapsed since `startedAt`, so a search that resolves instantly still
+ * shows the loading animation briefly instead of flashing.
+ *
+ * @param {number} startedAt - `Date.now()` timestamp from when the search began.
+ * @returns {Promise<void>}
+ */
 function waitForMinimumLoading(startedAt) {
   const remaining = MIN_LOADING_MS - (Date.now() - startedAt);
   return remaining > 0 ? new Promise((resolve) => setTimeout(resolve, remaining)) : Promise.resolve();

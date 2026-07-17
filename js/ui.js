@@ -1,3 +1,11 @@
+/**
+ * @fileoverview All DOM rendering and event wiring. No `fetch` calls live
+ * here — `app.js` calls into `api.js`/`auth.js` and passes the results to
+ * the render/`on*` functions exported below. `gsap` is loaded globally via
+ * a `<script>` tag in `index.html` (no bundler in this project), so it's
+ * used here as a bare global rather than an import.
+ */
+
 import { isMockMode } from "./mock.js";
 
 if (isMockMode()) {
@@ -7,6 +15,7 @@ if (isMockMode()) {
   document.body.appendChild(badge);
 }
 
+/** Cached references to every DOM element this module touches. */
 const els = {
   form: document.getElementById("search-form"),
   input: document.getElementById("search-input"),
@@ -39,6 +48,7 @@ const els = {
   userAvatarFallback: document.getElementById("user-avatar-fallback"),
 };
 
+/** Maps Spotify's `album_type` values to the label shown on each album card. */
 const ALBUM_TYPE_LABELS = {
   album: "Album",
   single: "Single",
@@ -59,6 +69,14 @@ const VIEW_STORAGE_KEY = "artichvr_view";
 const VIEW_MODES = ["grid", "list", "carousel"];
 const VIEW_LABELS = { grid: "Grid view", list: "List view", carousel: "Carousel view" };
 
+/**
+ * Switches the album grid's layout mode and updates the toggle button's
+ * label to name the mode it would switch to *next*. Persists the choice so
+ * it survives reloads and filter/sort re-renders (`renderAlbums` only ever
+ * touches `innerHTML`, never this class).
+ *
+ * @param {"grid"|"list"|"carousel"} mode
+ */
 function applyViewMode(mode) {
   els.albumsGrid.className = `albums-grid view-${mode}`;
   els.viewToggleButton.textContent = VIEW_LABELS[mode];
@@ -74,11 +92,15 @@ els.viewToggleButton.addEventListener("click", () => {
   applyViewMode(next);
 });
 
-// gsap is loaded globally via a <script> tag in index.html (no bundler in this project).
 let vinylTimeline = null;
 let errorTimeline = null;
 let logoSpinTween = null;
 
+/**
+ * Plays the one-time page-load intro: cascading header/hero/footer reveal,
+ * then starts a continuous slow ambient spin on the header logo and the
+ * hero background photo carousel. Call once, on initial page load.
+ */
 export function playIntroAnimation() {
   gsap
     .timeline()
@@ -96,6 +118,11 @@ export function playIntroAnimation() {
   playHeroBackgroundCarousel();
 }
 
+/**
+ * Starts the hero background photo carousel: crossfades between
+ * `.hero-bg-slide` elements every ~4 seconds, looping forever. A no-op if
+ * there's fewer than two slides to crossfade between.
+ */
 function playHeroBackgroundCarousel() {
   const slides = Array.from(document.querySelectorAll(".hero-bg-slide"));
   if (slides.length < 2) return;
@@ -109,6 +136,13 @@ function playHeroBackgroundCarousel() {
   });
 }
 
+/**
+ * Registers the handler that runs a search when the search form is
+ * submitted (Enter, or clicking Search).
+ *
+ * @param {(query: string) => void} handler - Called with the trimmed,
+ *   non-empty search query.
+ */
 export function onSearchSubmit(handler) {
   els.form.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -124,6 +158,14 @@ let suggestionDebounceTimer = null;
 let currentSuggestions = [];
 let highlightedIndex = -1;
 
+/**
+ * Registers the handler that fetches autocomplete suggestions as the user
+ * types, debounced so it doesn't fire on every keystroke. Clears any
+ * existing suggestions if the query is too short to search for.
+ *
+ * @param {(query: string) => void} handler - Called with the trimmed query,
+ *   at most once every `SUGGESTION_DEBOUNCE_MS`.
+ */
 export function onSearchInput(handler) {
   els.input.addEventListener("input", () => {
     clearTimeout(suggestionDebounceTimer);
@@ -138,6 +180,12 @@ export function onSearchInput(handler) {
   });
 }
 
+/**
+ * Registers the handler that shows recent-search history when the search
+ * input is focused while empty (i.e. before the user has typed anything).
+ *
+ * @param {() => void} handler
+ */
 export function onSearchFocus(handler) {
   els.input.addEventListener("focus", () => {
     if (els.input.value.trim() === "") handler();
@@ -150,6 +198,12 @@ export function onSearchFocus(handler) {
 // closed) can't stack tweens or fight over the element's opacity.
 const DROPDOWN_ANIM_S = 0.2;
 
+/**
+ * Reveals a dropdown element with a fade + slight drop-in animation.
+ * A no-op if the element is already visible.
+ *
+ * @param {HTMLElement} el - The dropdown element (must use the `hidden` attribute).
+ */
 function openDropdown(el) {
   if (!el.hidden) return;
   el.hidden = false;
@@ -157,6 +211,17 @@ function openDropdown(el) {
   gsap.fromTo(el, { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: DROPDOWN_ANIM_S, ease: "power2.out" });
 }
 
+/**
+ * Hides a dropdown element with a fade-out animation, only setting `hidden`
+ * once the animation completes. A no-op (aside from calling `onDone`
+ * immediately) if the element is already hidden.
+ *
+ * @param {HTMLElement} el - The dropdown element (must use the `hidden` attribute).
+ * @param {() => void} [onDone] - Called once the element is fully hidden
+ *   (immediately, if it was already hidden). Used to defer clearing content
+ *   until the fade-out finishes, so the dropdown doesn't visibly go blank
+ *   mid-animation.
+ */
 function closeDropdown(el, onDone) {
   if (el.hidden) {
     onDone?.();
@@ -176,6 +241,14 @@ function closeDropdown(el, onDone) {
   });
 }
 
+/**
+ * Renders the autocomplete/history suggestions dropdown and opens it.
+ * Closes the dropdown instead if there are no artists to show.
+ *
+ * @param {object[]} artists - Spotify artist objects to list.
+ * @param {string} [heading] - Optional label shown above the list (e.g.
+ *   `"Recent searches"`); omitted for live search-as-you-type results.
+ */
 export function renderSuggestions(artists, heading) {
   if (artists.length === 0) {
     clearSuggestions();
@@ -205,6 +278,10 @@ export function renderSuggestions(artists, heading) {
   els.input.setAttribute("aria-expanded", "true");
 }
 
+/**
+ * Closes the suggestions dropdown and clears its content once the
+ * close animation finishes.
+ */
 export function clearSuggestions() {
   currentSuggestions = [];
   highlightedIndex = -1;
@@ -215,6 +292,15 @@ export function clearSuggestions() {
   els.input.removeAttribute("aria-activedescendant");
 }
 
+/**
+ * Moves the keyboard-navigation highlight to the given suggestion index,
+ * wrapping around at either end, and keeps it scrolled into view. Updates
+ * `aria-activedescendant` on the input so screen readers track the
+ * highlighted item too.
+ *
+ * @param {number} index - Target index; may be out of `[0, length)`, in
+ *   which case it wraps.
+ */
 function highlightSuggestion(index) {
   const items = Array.from(els.suggestions.querySelectorAll(".search-suggestion"));
   if (items.length === 0) return;
@@ -225,6 +311,9 @@ function highlightSuggestion(index) {
   els.input.setAttribute("aria-activedescendant", items[highlightedIndex].id);
 }
 
+// Arrow keys move the highlight through the open suggestions dropdown;
+// Enter selects whichever item is highlighted (if any) instead of
+// submitting the form.
 els.input.addEventListener("keydown", (event) => {
   if (els.suggestions.hidden) return;
   const items = Array.from(els.suggestions.querySelectorAll(".search-suggestion"));
@@ -242,6 +331,14 @@ els.input.addEventListener("keydown", (event) => {
   }
 });
 
+/**
+ * Registers the handler that fires when a suggestion is picked (by click
+ * or keyboard Enter). Fills the search input with the chosen artist's name
+ * and closes the dropdown before calling the handler.
+ *
+ * @param {(artist: object) => void} handler - Called with the full Spotify
+ *   artist object for the chosen suggestion.
+ */
 export function onSuggestionSelect(handler) {
   els.suggestions.addEventListener("click", (event) => {
     const button = event.target.closest(".search-suggestion");
@@ -266,6 +363,13 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") clearSuggestions();
 });
 
+/**
+ * Registers the handler that fires whenever an album-type filter pill
+ * (Albums/Singles/Compilations) is toggled.
+ *
+ * @param {() => void} handler - Called after the clicked pill's active
+ *   state has been toggled.
+ */
 export function onFilterChange(handler) {
   els.filterPills.forEach((pill) => {
     pill.addEventListener("click", () => {
@@ -275,6 +379,13 @@ export function onFilterChange(handler) {
   });
 }
 
+/**
+ * Registers the handler for the "Clear" filters button: re-activates every
+ * type filter pill and resets the decade filter to "All" before calling
+ * the handler.
+ *
+ * @param {() => void} handler
+ */
 export function onClearFilters(handler) {
   els.clearFiltersButton.addEventListener("click", () => {
     els.filterPills.forEach((pill) => pill.classList.add("is-active"));
@@ -286,6 +397,14 @@ export function onClearFilters(handler) {
 let sortOrder = "newest";
 const SORT_LABELS = { newest: "Newest first", oldest: "Oldest first" };
 
+/**
+ * Registers the handler that fires when the sort order changes, and wires
+ * up the sort dropdown's open/close toggle and item selection. A custom
+ * dropdown rather than a native `<select>`, since a native select's open
+ * option list is drawn by the OS and can't be themed.
+ *
+ * @param {() => void} handler - Called after `getSortOrder()` reflects the newly chosen order.
+ */
 export function onSortChange(handler) {
   els.sortButton.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -307,11 +426,13 @@ export function onSortChange(handler) {
   });
 }
 
+/** Opens the sort dropdown and marks the trigger button as expanded. */
 function openSortMenu() {
   openDropdown(els.sortMenu);
   els.sortButton.setAttribute("aria-expanded", "true");
 }
 
+/** Closes the sort dropdown and marks the trigger button as collapsed. */
 function closeSortMenu() {
   closeDropdown(els.sortMenu);
   els.sortButton.setAttribute("aria-expanded", "false");
@@ -325,6 +446,11 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeSortMenu();
 });
 
+/**
+ * Reads which album-type filter pills are currently active.
+ *
+ * @returns {string[]} Active `album_type` values (e.g. `["album", "single"]`).
+ */
 export function getActiveTypes() {
   return els.filterPills
     .filter((pill) => pill.classList.contains("is-active"))
@@ -333,6 +459,13 @@ export function getActiveTypes() {
 
 let activeDecade = "all";
 
+/**
+ * Renders the decade filter pills for the decades actually present in the
+ * current discography (plus an "All" pill), and resets the selection to
+ * "All". Hides the whole row if there's nothing to filter by.
+ *
+ * @param {number[]} decades - Decades to offer as pills, e.g. `[2020, 2010]`.
+ */
 export function renderDecadePills(decades) {
   activeDecade = "all";
 
@@ -351,6 +484,11 @@ export function renderDecadePills(decades) {
   els.decadePills.hidden = false;
 }
 
+/**
+ * Marks a single decade pill (or "all") as the active one.
+ *
+ * @param {string} decade - `"all"` or a decade as a string, e.g. `"2020"`.
+ */
 function setActiveDecade(decade) {
   activeDecade = decade;
   Array.from(els.decadePills.children).forEach((pill) => {
@@ -358,6 +496,12 @@ function setActiveDecade(decade) {
   });
 }
 
+/**
+ * Registers the handler that fires when a decade pill is clicked.
+ *
+ * @param {() => void} handler - Called after `getActiveDecade()` reflects
+ *   the newly selected decade.
+ */
 export function onDecadeChange(handler) {
   els.decadePills.addEventListener("click", (event) => {
     const pill = event.target.closest(".decade-pill");
@@ -368,22 +512,49 @@ export function onDecadeChange(handler) {
   });
 }
 
+/**
+ * Reads the currently selected decade filter.
+ *
+ * @returns {string} `"all"`, or a decade as a string, e.g. `"2020"`.
+ */
 export function getActiveDecade() {
   return activeDecade;
 }
 
+/**
+ * Reads the currently selected sort order.
+ *
+ * @returns {"newest"|"oldest"}
+ */
 export function getSortOrder() {
   return sortOrder;
 }
 
+/**
+ * Registers the handler for the "Log in with Spotify" button.
+ *
+ * @param {() => void} handler
+ */
 export function onLoginClick(handler) {
   els.loginButton.addEventListener("click", handler);
 }
 
+/**
+ * Registers the handler for the "Log out" menu item.
+ *
+ * @param {() => void} handler
+ */
 export function onLogoutClick(handler) {
   els.logoutButton.addEventListener("click", handler);
 }
 
+/**
+ * Registers the handler for the "History" profile-menu item: closes the
+ * profile menu, scrolls/focuses the search input, then calls the handler
+ * (which typically renders search history as suggestions).
+ *
+ * @param {() => void} handler
+ */
 export function onHistoryClick(handler) {
   els.historyButton.addEventListener("click", (event) => {
     event.stopPropagation();
@@ -394,6 +565,13 @@ export function onHistoryClick(handler) {
   });
 }
 
+/**
+ * Registers the handler for clicking an album's Save/Saved button
+ * (delegated from the grid container, since album cards are re-rendered
+ * wholesale on every filter/sort change).
+ *
+ * @param {(albumId: string, button: HTMLButtonElement) => void} handler
+ */
 export function onSaveAlbumClick(handler) {
   els.albumsGrid.addEventListener("click", (event) => {
     const button = event.target.closest(".save-button");
@@ -401,6 +579,13 @@ export function onSaveAlbumClick(handler) {
   });
 }
 
+/**
+ * Updates a Save button's visual state and plays a small "pop" animation
+ * to acknowledge the click.
+ *
+ * @param {HTMLButtonElement} button - The album's Save button.
+ * @param {boolean} isSaved - Whether the album is now saved.
+ */
 export function setAlbumSaved(button, isSaved) {
   button.classList.toggle("is-saved", isSaved);
   button.textContent = isSaved ? "Saved" : "Save";
@@ -410,6 +595,14 @@ export function setAlbumSaved(button, isSaved) {
 const TOAST_VISIBLE_MS = 2500;
 let toastHideTimer = null;
 
+/**
+ * Shows a transient confirmation/error message at the bottom of the
+ * screen, replacing any toast already showing, and auto-hides it after
+ * `TOAST_VISIBLE_MS`.
+ *
+ * @param {string} message - Text to display.
+ * @param {"success"|"error"} [variant="success"] - Visual style.
+ */
 export function showToast(message, variant = "success") {
   clearTimeout(toastHideTimer);
   gsap.killTweensOf(els.toast);
@@ -432,6 +625,10 @@ export function showToast(message, variant = "success") {
   }, TOAST_VISIBLE_MS);
 }
 
+/**
+ * Switches the header to its logged-out state: shows the login button,
+ * hides the user chip, and closes the profile menu if it was open.
+ */
 export function showLoggedOut() {
   document.body.classList.remove("logged-in");
   els.loginButton.hidden = false;
@@ -439,6 +636,13 @@ export function showLoggedOut() {
   closeUserMenu();
 }
 
+/**
+ * Switches the header to its logged-in state: shows the user's name and
+ * avatar (falling back to their first initial if there's no avatar photo).
+ *
+ * @param {string} displayName - The user's Spotify display name (or ID as a fallback).
+ * @param {string} [avatarUrl] - URL of the user's profile photo, if any.
+ */
 export function showLoggedIn(displayName, avatarUrl) {
   document.body.classList.add("logged-in");
   els.loginButton.hidden = true;
@@ -456,6 +660,7 @@ export function showLoggedIn(displayName, avatarUrl) {
   }
 }
 
+/** Closes the profile dropdown menu (History/Log out). */
 function closeUserMenu() {
   closeDropdown(els.userMenu);
   els.userMenuButton.setAttribute("aria-expanded", "false");
@@ -482,6 +687,11 @@ document.addEventListener("keydown", (event) => {
 
 els.logoutButton.addEventListener("click", closeUserMenu);
 
+/**
+ * Switches the page into its loading state: collapses the hero (on the
+ * first search only), clears any previous results, and starts the vinyl
+ * loader animation.
+ */
 export function showLoading() {
   if (!document.body.classList.contains("has-results")) {
     document.body.classList.add("has-results");
@@ -499,6 +709,12 @@ export function showLoading() {
   playVinylLoader();
 }
 
+/**
+ * Switches the page into its error state, showing the given message and
+ * starting the needle-jitter animation.
+ *
+ * @param {string} message - Error text to display.
+ */
 export function showError(message) {
   stopVinylLoader();
   logoSpinTween?.pause();
@@ -510,6 +726,10 @@ export function showError(message) {
   playErrorJitter();
 }
 
+/**
+ * Clears the loading/error status area and resumes the header logo's
+ * ambient spin. Called once a search has successfully rendered results.
+ */
 export function clearStatus() {
   stopVinylLoader();
   stopErrorJitter();
@@ -519,6 +739,12 @@ export function clearStatus() {
   els.statusText.textContent = "";
 }
 
+/**
+ * Renders the artist header card (photo, name, follower count, Spotify
+ * link) and plays its staggered entrance animation.
+ *
+ * @param {object} artist - Spotify artist object.
+ */
 export function renderArtist(artist) {
   const photo = artist.images[0]?.url ?? "";
   const followersTotal = artist.followers?.total;
@@ -547,6 +773,14 @@ export function renderArtist(artist) {
   });
 }
 
+/**
+ * Renders the album grid (or the "no albums match" empty state) and
+ * updates the results count, then plays a staggered entrance animation for
+ * the new cards.
+ *
+ * @param {object[]} albums - Albums to display, already filtered and sorted
+ *   by the caller.
+ */
 export function renderAlbums(albums) {
   els.albumsToolbar.hidden = false;
 
@@ -570,6 +804,10 @@ export function renderAlbums(albums) {
   });
 }
 
+/**
+ * Collapses the hero section (title/subtitle/search-bar area shrinks to a
+ * compact bar, background photo fades out) the first time results appear.
+ */
 function collapseHero() {
   const heroCopy = document.querySelector(".hero-copy");
   const hero = document.querySelector(".hero");
@@ -581,11 +819,16 @@ function collapseHero() {
   gsap.to(".hero-bg, .hero-overlay", { opacity: 0, duration: 0.5, ease: "power2.inOut" });
 }
 
+/**
+ * Plays the loading turntable animation: the tonearm drops onto the record,
+ * then the vinyl disc's label spins continuously until stopped.
+ *
+ * svgOrigin (not transformOrigin) pins the pivot to a point in the SVG's own
+ * viewBox coordinates - GSAP otherwise resolves px origins against the
+ * rotating element's own tiny bounding box, sending it wildly off-center.
+ */
 function playVinylLoader() {
   vinylTimeline?.kill();
-  // svgOrigin (not transformOrigin) pins the pivot to a point in the SVG's own
-  // viewBox coordinates - GSAP otherwise resolves px origins against the
-  // rotating element's own tiny bounding box, sending it wildly off-center.
   gsap.set(".tonearm", { rotation: -18, svgOrigin: "129 20" });
   gsap.set(".vinyl-disc", { rotation: 0, svgOrigin: "70 65" });
 
@@ -595,11 +838,13 @@ function playVinylLoader() {
     .to(".vinyl-disc", { rotation: "+=360", duration: 1.1, ease: "none", repeat: -1, svgOrigin: "70 65" }, 0.7);
 }
 
+/** Stops and discards the loading turntable animation, if running. */
 function stopVinylLoader() {
   vinylTimeline?.kill();
   vinylTimeline = null;
 }
 
+/** Plays the error state's needle-jitter animation, looping until stopped. */
 function playErrorJitter() {
   errorTimeline?.kill();
   gsap.set(".error-needle", { rotation: 0, svgOrigin: "70 12" });
@@ -613,11 +858,21 @@ function playErrorJitter() {
     .to(".error-needle", { rotation: 0, duration: 0.18 });
 }
 
+/** Stops and discards the error needle-jitter animation, if running. */
 function stopErrorJitter() {
   errorTimeline?.kill();
   errorTimeline = null;
 }
 
+/**
+ * Builds the HTML for a single album card, matching the currently
+ * selected view mode (grid/list/carousel all reuse the same markup,
+ * restyled via CSS).
+ *
+ * @param {object & {isSaved: boolean}} album - Spotify album object, plus
+ *   the locally tracked `isSaved` flag.
+ * @returns {string} HTML for one `.album-card`.
+ */
 function albumCardHtml(album) {
   const cover = album.images[0]?.url ?? "";
   const year = new Date(album.release_date).getFullYear();
@@ -640,6 +895,13 @@ function albumCardHtml(album) {
   `;
 }
 
+/**
+ * Escapes text for safe injection into an HTML template — Spotify API data
+ * (artist/album names) is never assumed safe to insert raw.
+ *
+ * @param {string} text - Raw text to escape.
+ * @returns {string} HTML-escaped text.
+ */
 function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text;
