@@ -82,4 +82,6 @@ Nothing outstanding right now. Sort/filter by album type and decade, "save to yo
 
 The decade pills (`js/app.js`, `getAvailableDecades`) are computed from whatever discography just loaded, not a fixed list — an artist with only 2010s–2020s releases won't show a `2000s` pill. `renderDecadePills` resets the selection to "All" on every new search.
 
+The album grid has three view modes — grid (default, larger covers than before), compact list, horizontal-scroll carousel — cycled by one button (`#view-toggle-button`) whose label always names the mode you'd switch *to* next. The chosen mode is a CSS class on `#albums-grid` (`view-grid`/`view-list`/`view-carousel`, `js/ui.js`) persisted to `localStorage.artichvr_view`; `renderAlbums` only touches `innerHTML`, never the class list, so the mode survives filter/sort/decade re-renders without needing to be re-applied.
+
 The sort control (`#sort-button`/`#sort-menu` in `ui.js`) is a hand-built dropdown, not a native `<select>` — a native select's closed state can be themed but its open option list is drawn by the OS and ignores the page's CSS entirely, which broke the dark theme. Same floating-menu pattern as the profile dropdown (`#user-menu`): toggle on click, close on outside click/Escape.

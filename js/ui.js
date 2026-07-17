@@ -19,6 +19,7 @@ const els = {
   clearFiltersButton: document.getElementById("clear-filters-button"),
   decadePills: document.getElementById("decade-pills"),
   albumsCount: document.getElementById("albums-count"),
+  viewToggleButton: document.getElementById("view-toggle-button"),
   sortButton: document.getElementById("sort-button"),
   sortMenu: document.getElementById("sort-menu"),
   sortLabel: document.getElementById("sort-label"),
@@ -52,6 +53,25 @@ els.themeToggleButton.addEventListener("click", () => {
   const next = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
   document.documentElement.setAttribute("data-theme", next);
   localStorage.setItem(THEME_STORAGE_KEY, next);
+});
+
+const VIEW_STORAGE_KEY = "artichvr_view";
+const VIEW_MODES = ["grid", "list", "carousel"];
+const VIEW_LABELS = { grid: "Grid view", list: "List view", carousel: "Carousel view" };
+
+function applyViewMode(mode) {
+  els.albumsGrid.className = `albums-grid view-${mode}`;
+  els.viewToggleButton.textContent = VIEW_LABELS[mode];
+  localStorage.setItem(VIEW_STORAGE_KEY, mode);
+}
+
+const storedView = localStorage.getItem(VIEW_STORAGE_KEY);
+applyViewMode(VIEW_MODES.includes(storedView) ? storedView : "grid");
+
+els.viewToggleButton.addEventListener("click", () => {
+  const current = localStorage.getItem(VIEW_STORAGE_KEY);
+  const next = VIEW_MODES[(VIEW_MODES.indexOf(current) + 1) % VIEW_MODES.length];
+  applyViewMode(next);
 });
 
 // gsap is loaded globally via a <script> tag in index.html (no bundler in this project).

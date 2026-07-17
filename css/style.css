@@ -678,10 +678,79 @@ main {
   display: none;
 }
 
+.view-toggle-button {
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.view-toggle-button:hover {
+  border-color: var(--border-strong);
+}
+
 .albums-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.albums-grid.view-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.albums-grid.view-list .album-card {
+  flex-direction: row;
+  align-items: center;
+}
+
+.albums-grid.view-list .album-card-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+}
+
+.albums-grid.view-list .album-card-link img {
+  width: 56px;
+  height: 56px;
+  aspect-ratio: 1 / 1;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.albums-grid.view-list .album-info {
+  padding: 0;
+  min-width: 0;
+}
+
+.albums-grid.view-list .album-info p:last-child {
+  display: none;
+}
+
+.albums-grid.view-list .save-button {
+  width: auto;
+  flex-shrink: 0;
+  margin: 0 0.75rem;
+  padding: 0.4rem 1rem;
+}
+
+.albums-grid.view-carousel {
+  display: flex;
   gap: 1.25rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.albums-grid.view-carousel .album-card {
+  flex: 0 0 180px;
 }
 
 .album-card {
