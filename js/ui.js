@@ -18,6 +18,7 @@ const els = {
   filterPills: Array.from(document.querySelectorAll(".filter-pill")),
   clearFiltersButton: document.getElementById("clear-filters-button"),
   decadePills: document.getElementById("decade-pills"),
+  albumsCount: document.getElementById("albums-count"),
   sortButton: document.getElementById("sort-button"),
   sortMenu: document.getElementById("sort-menu"),
   sortLabel: document.getElementById("sort-label"),
@@ -101,6 +102,7 @@ const SUGGESTION_DEBOUNCE_MS = 400;
 const SUGGESTION_MIN_LENGTH = 2;
 let suggestionDebounceTimer = null;
 let currentSuggestions = [];
+let highlightedIndex = -1;
 
 export function onSearchInput(handler) {
   els.input.addEventListener("input", () => {
@@ -129,6 +131,7 @@ export function renderSuggestions(artists, heading) {
   }
 
   currentSuggestions = artists;
+  highlightedIndex = -1;
   const headingHtml = heading ? `<li class="search-suggestions-heading">${escapeHtml(heading)}</li>` : "";
   els.suggestions.innerHTML =
     headingHtml +
@@ -137,7 +140,7 @@ export function renderSuggestions(artists, heading) {
         const photo = artist.images[artist.images.length - 1]?.url ?? "";
         return `
           <li>
-            <button type="button" class="search-suggestion" data-index="${index}">
+            <button type="button" id="search-suggestion-${index}" class="search-suggestion" data-index="${index}">
               <img src="${photo}" alt="" />
               <span>${escapeHtml(artist.name)}</span>
             </button>
@@ -152,10 +155,39 @@ export function renderSuggestions(artists, heading) {
 
 export function clearSuggestions() {
   currentSuggestions = [];
+  highlightedIndex = -1;
   els.suggestions.hidden = true;
   els.suggestions.innerHTML = "";
   els.input.setAttribute("aria-expanded", "false");
+  els.input.removeAttribute("aria-activedescendant");
 }
+
+function highlightSuggestion(index) {
+  const items = Array.from(els.suggestions.querySelectorAll(".search-suggestion"));
+  if (items.length === 0) return;
+
+  highlightedIndex = (index + items.length) % items.length;
+  items.forEach((item, i) => item.classList.toggle("is-highlighted", i === highlightedIndex));
+  items[highlightedIndex].scrollIntoView({ block: "nearest" });
+  els.input.setAttribute("aria-activedescendant", items[highlightedIndex].id);
+}
+
+els.input.addEventListener("keydown", (event) => {
+  if (els.suggestions.hidden) return;
+  const items = Array.from(els.suggestions.querySelectorAll(".search-suggestion"));
+  if (items.length === 0) return;
+
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    highlightSuggestion(highlightedIndex + 1);
+  } else if (event.key === "ArrowUp") {
+    event.preventDefault();
+    highlightSuggestion(highlightedIndex - 1);
+  } else if (event.key === "Enter" && highlightedIndex >= 0) {
+    event.preventDefault();
+    items[highlightedIndex].click();
+  }
+});
 
 export function onSuggestionSelect(handler) {
   els.suggestions.addEventListener("click", (event) => {
@@ -468,10 +500,12 @@ export function renderAlbums(albums) {
   if (albums.length === 0) {
     els.albumsGrid.innerHTML = "";
     els.albumsEmpty.hidden = false;
+    els.albumsCount.textContent = "";
     return;
   }
 
   els.albumsEmpty.hidden = true;
+  els.albumsCount.textContent = `${albums.length} ${albums.length === 1 ? "album" : "albums"}`;
   els.albumsGrid.innerHTML = albums.map(albumCardHtml).join("");
 
   gsap.from(els.albumsGrid.querySelectorAll(".album-card"), {

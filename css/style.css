@@ -388,7 +388,8 @@ body.has-results .hero {
 }
 
 .search-suggestion:hover,
-.search-suggestion:focus-visible {
+.search-suggestion:focus-visible,
+.search-suggestion.is-highlighted {
   background: var(--suggestion-hover-bg);
 }
 
@@ -591,6 +592,12 @@ main {
 .decade-pill.is-active {
   background: rgba(29, 185, 84, 0.18);
   color: var(--accent);
+}
+
+.albums-count {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.8rem;
 }
 
 .sort-dropdown {
