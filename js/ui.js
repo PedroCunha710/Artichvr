@@ -144,6 +144,38 @@ export function onSearchFocus(handler) {
   });
 }
 
+// Shared open/close for the suggestions, sort, and user-menu dropdowns: fade
+// + slight drop-in, matching the toast's animation language. Guarded by the
+// current `hidden` state so a rapid double-call (e.g. Escape while already
+// closed) can't stack tweens or fight over the element's opacity.
+const DROPDOWN_ANIM_S = 0.2;
+
+function openDropdown(el) {
+  if (!el.hidden) return;
+  el.hidden = false;
+  gsap.killTweensOf(el);
+  gsap.fromTo(el, { opacity: 0, y: -8 }, { opacity: 1, y: 0, duration: DROPDOWN_ANIM_S, ease: "power2.out" });
+}
+
+function closeDropdown(el, onDone) {
+  if (el.hidden) {
+    onDone?.();
+    return;
+  }
+
+  gsap.killTweensOf(el);
+  gsap.to(el, {
+    opacity: 0,
+    y: -8,
+    duration: DROPDOWN_ANIM_S,
+    ease: "power2.in",
+    onComplete: () => {
+      el.hidden = true;
+      onDone?.();
+    },
+  });
+}
+
 export function renderSuggestions(artists, heading) {
   if (artists.length === 0) {
     clearSuggestions();
@@ -169,15 +201,16 @@ export function renderSuggestions(artists, heading) {
       })
       .join("");
 
-  els.suggestions.hidden = false;
+  openDropdown(els.suggestions);
   els.input.setAttribute("aria-expanded", "true");
 }
 
 export function clearSuggestions() {
   currentSuggestions = [];
   highlightedIndex = -1;
-  els.suggestions.hidden = true;
-  els.suggestions.innerHTML = "";
+  closeDropdown(els.suggestions, () => {
+    els.suggestions.innerHTML = "";
+  });
   els.input.setAttribute("aria-expanded", "false");
   els.input.removeAttribute("aria-activedescendant");
 }
@@ -275,12 +308,12 @@ export function onSortChange(handler) {
 }
 
 function openSortMenu() {
-  els.sortMenu.hidden = false;
+  openDropdown(els.sortMenu);
   els.sortButton.setAttribute("aria-expanded", "true");
 }
 
 function closeSortMenu() {
-  els.sortMenu.hidden = true;
+  closeDropdown(els.sortMenu);
   els.sortButton.setAttribute("aria-expanded", "false");
 }
 
@@ -424,7 +457,7 @@ export function showLoggedIn(displayName, avatarUrl) {
 }
 
 function closeUserMenu() {
-  els.userMenu.hidden = true;
+  closeDropdown(els.userMenu);
   els.userMenuButton.setAttribute("aria-expanded", "false");
 }
 
@@ -434,7 +467,7 @@ els.userMenuButton.addEventListener("click", (event) => {
   if (isOpen) {
     closeUserMenu();
   } else {
-    els.userMenu.hidden = false;
+    openDropdown(els.userMenu);
     els.userMenuButton.setAttribute("aria-expanded", "true");
   }
 });
