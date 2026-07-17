@@ -72,7 +72,8 @@ Needs to be served over HTTP (ES modules and the Spotify token request don't wor
 
 ## Conventions
 
-- No comments unless the code hides a non-obvious reason (e.g. the auth trade-off above).
+- Every function in `js/` — exported or internal — gets a JSDoc block (`@param`/`@returns`/`@throws` as applicable), plus a `@fileoverview` at the top of each file. Deliberate exception to "no comments unless non-obvious": this project is open source, and JSDoc is written for a contributor who's never seen the code, not just for the one non-obvious line. Inline comments still follow the stricter rule below.
+- Beyond the JSDoc blocks above, no inline comments unless the code hides a non-obvious reason (e.g. the auth trade-off above).
 - Escape any text interpolated from the Spotify API into HTML templates (artist/album names) before rendering — don't assume API data is safe to inject raw.
 - All user-facing strings and docs are in English.
 
