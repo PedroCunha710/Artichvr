@@ -10,7 +10,11 @@ Personal project built to demonstrate REST API consumption, DOM manipulation, an
 
 ## Screenshots
 
-> 📸 _Add screenshots of the app here (search, artist card, album grid) once the interface is ready._
+| | |
+|---|---|
+| ![Hero / landing page](assets/screenshots/hero.png) | ![Search results, grid view, light theme](assets/screenshots/search-grid-light.png) |
+| ![List view](assets/screenshots/view-list.png) | ![Carousel view](assets/screenshots/view-carousel.png) |
+| ![Dark theme](assets/screenshots/dark-theme.png) | |
 
 ## Features
 
