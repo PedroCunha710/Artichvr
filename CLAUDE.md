@@ -4,7 +4,7 @@ Guidance for Claude Code when working in this repository.
 
 ## Project
 
-Spotify Album Finder — a static, front-end-only web app to search an artist and browse their full discography via the Spotify Web API. Portfolio project: the priority is clean, readable, well-documented vanilla JS, not framework tricks.
+Spotify Album Finder — a static, front-end-only web app to search an artist and browse their full discography via the Spotify Web API. Portfolio project: the priority is clean, readable, well-documented vanilla JS, not framework tricks. One small server-side exception: see `worker/` below and "CORS proxy".
 
 ## Stack
 
@@ -12,7 +12,7 @@ Spotify Album Finder — a static, front-end-only web app to search an artist an
 - Native ES modules (`<script type="module">`) — import/export between files in `js/`
 - [GSAP](https://gsap.com/) for animation, loaded via CDN `<script>` tag (classic, not a module) before `app.js` — `window.gsap` is used as a global inside `ui.js`, no import statement. Chosen over more CSS `@keyframes` because it can orchestrate sequences (tonearm-drop-then-spin, staggered card entrances) that plain CSS animations handle awkwardly.
 - Spotify Web API (Search, Artists, Albums endpoints)
-- No backend/server component
+- A single Cloudflare Worker (`worker/`) as a CORS proxy in front of `api.spotify.com` — see "CORS proxy" below. Otherwise no backend/server component.
 
 ## Structure
 
@@ -27,6 +27,8 @@ js/ui.js           # DOM rendering, no fetch calls here
 js/app.js          # entry point, wires ui.js events to api.js/auth.js calls
 js/config.js       # gitignored — real credentials, created from config.example.js
 js/config.example.js
+worker/spotify-proxy.js  # Cloudflare Worker: CORS proxy in front of api.spotify.com, see "CORS proxy"
+worker/wrangler.toml
 assets/
 ```
 
@@ -42,6 +44,12 @@ Two separate flows, for two separate purposes:
 Credentials live in `js/config.js`, which is gitignored. `js/config.example.js` is the template committed to the repo.
 
 Spotify's February 2026 Dev Mode changes removed the old content-specific library endpoints (`PUT`/`DELETE /me/albums`, `GET /me/albums/contains`) — they now 403 unconditionally regardless of scope. `js/api.js` uses the replacement generic endpoint (`/me/library`, `/me/library/contains`), which is keyed by full Spotify URI (`spotify:album:{id}`) rather than a bare ID; see `albumUri()`.
+
+## CORS proxy
+
+`accounts.spotify.com` (login/token requests, used by both `getAccessToken` in `js/api.js` and the whole of `js/auth.js`) sends CORS headers and works fine from a direct browser `fetch`. `api.spotify.com` (search, artist albums, `/me`, `/me/library` — everything `BASE_URL` in `js/api.js` points at) sends none, on any endpoint, confirmed by hitting it directly (`curl -i -X OPTIONS`) — the preflight comes back `200` with no `Access-Control-Allow-Origin` at all. That's a deliberate restriction on Spotify's end (matches long-standing reports on `spotify/web-api` and the Spotify community forums), not a bug or a Dashboard misconfiguration, and it blocks the request before it leaves the page regardless of Redirect URI setup.
+
+`worker/spotify-proxy.js` works around this: a minimal Cloudflare Worker that forwards `BASE_URL` traffic to `api.spotify.com` server-to-server (where CORS doesn't apply), then re-attaches a permissive `Access-Control-Allow-Origin` header on the way back. `js/api.js`'s `BASE_URL` points at the deployed worker (`API_PROXY_URL` in `config.js`) instead of `api.spotify.com` directly; the worker itself holds no secrets and does nothing but pass the request through and reattach that header. It's the one deliberate exception to "no backend" in this project — everything else about the app is still a static site. `js/auth.js`'s calls to `accounts.spotify.com` are untouched and go straight there, since CORS already works for that domain.
 
 ## Animation
 

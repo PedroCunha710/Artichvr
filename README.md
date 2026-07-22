@@ -74,14 +74,31 @@ Or use the VS Code **Live Server** extension.
    ```bash
    cp js/config.example.js js/config.js
    ```
-4. Fill in `js/config.js` with your credentials:
+4. Fill in `js/config.js` with your credentials and your deployed proxy URL from the next section:
    ```js
    export const CLIENT_ID = "your-client-id";
    export const CLIENT_SECRET = "your-client-secret";
+   export const API_PROXY_URL = "https://your-worker-subdomain.workers.dev";
    ```
 5. `js/config.js` is in `.gitignore` — never commit your credentials.
 
 > ⚠️ Search and album browsing use the **Client Credentials Flow** directly in the browser (no backend), so the Client Secret is exposed in client-side code. That's acceptable for a demo project with public data; it's not the recommended pattern for a production app handling real secrets. Logging in and saving albums use a separate **Authorization Code + PKCE** flow instead, which needs no client secret and is the correct pattern for user-facing actions in a backend-less app.
+
+## CORS proxy (required for real data)
+
+`accounts.spotify.com` (used for login/token requests) sends CORS headers and works fine from the browser directly. `api.spotify.com` (used for search, artist albums, profile, and library — basically everything else) does not send CORS headers on any of its endpoints, so a direct browser `fetch` to it is blocked before the request even leaves the page, regardless of your Redirect URI or Dashboard setup. This is a deliberate restriction on Spotify's end, not a bug in this app.
+
+To work around it, `worker/spotify-proxy.js` is a small [Cloudflare Worker](https://developers.cloudflare.com/workers/) that forwards requests to `api.spotify.com` server-to-server (where CORS doesn't apply) and re-attaches a permissive CORS header on the way back. It's the only server-side piece in an otherwise backend-less project, and exists solely to work around this Spotify limitation — it doesn't hold any secrets or do anything beyond pass the request through.
+
+Deploy your own (free tier is enough):
+
+```bash
+cd worker
+npx wrangler login    # opens a browser to authenticate with your Cloudflare account
+npx wrangler deploy
+```
+
+This prints a URL like `https://artichvr-spotify-proxy.<your-subdomain>.workers.dev` — put that in `js/config.js` as `API_PROXY_URL` (see above). Without mock mode, none of the real search/login/library features work until this is deployed and configured.
 
 ## License
 

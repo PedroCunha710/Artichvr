@@ -7,11 +7,16 @@
  * first and, if active, returns fixture data instead of calling `fetch`.
  */
 
-import { CLIENT_ID, CLIENT_SECRET } from "./config.js";
+import { CLIENT_ID, CLIENT_SECRET, API_PROXY_URL } from "./config.js";
 import { isMockMode, MOCK_SUGGESTIONS, MOCK_ALBUMS, MOCK_PROFILE, mockCheckSaved, mockSave, mockRemove } from "./mock.js";
 
 const TOKEN_URL = "https://accounts.spotify.com/api/token";
-const BASE_URL = "https://api.spotify.com/v1";
+// api.spotify.com (unlike accounts.spotify.com) sends no CORS headers on its
+// data endpoints, so browser fetches to it are blocked before they leave the
+// page; API_PROXY_URL points at the Cloudflare Worker in worker/ that
+// forwards these requests server-to-server and re-adds a CORS header. See
+// the README's "CORS proxy" section for deploying your own.
+const BASE_URL = API_PROXY_URL;
 
 let accessToken = null;
 let tokenExpiresAt = 0;
