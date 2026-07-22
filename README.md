@@ -14,18 +14,17 @@ Personal project built to demonstrate REST API consumption, DOM manipulation, an
 
 ## Features
 
-- Search for an artist by name
+- Search for an artist by name, with real-time search-as-you-type suggestions (keyboard-navigable)
 - Lists all albums, singles, and compilations
 - For each album: cover art, name, release date, track count, type, and a direct link to Spotify
-- Sort by release date and filter by album type
-- Log in with Spotify to save/remove albums to your own library, right from the app
-- Responsive UI with a dark theme
-- Loading and error states
-
-### Planned extras
-
-- Real-time search
-- Search history (localStorage)
+- Sort by release date, filter by album type and by decade
+- Grid, list, and carousel view modes for the album grid
+- Log in with Spotify (Authorization Code + PKCE) to save/remove albums to your own library, with a toast confirmation
+- Recent search history, accessible from the profile menu
+- Light/dark theme toggle
+- Responsive UI with GSAP-powered animations (page intro, loading, error states, card entrances)
+- Loading and error states, including handling for Spotify rate limiting
+- Offline/mock test mode (`?mock=1`) for developing without burning API rate limits
 
 ## Tech stack
 
