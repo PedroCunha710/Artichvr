@@ -23,12 +23,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # LOGIN_ENABLED is false here (unlike js/config.example.js's default)
+      # because Spotify's Development Mode caps this app at a handful of
+      # authorized accounts - login can't work for the general public on
+      # this deployed site, only for accounts added in the Spotify Dashboard.
       - name: Generate js/config.js from repository secrets
         run: |
           cat > js/config.js <<EOF
           export const CLIENT_ID = "${{ secrets.SPOTIFY_CLIENT_ID }}";
           export const CLIENT_SECRET = "${{ secrets.SPOTIFY_CLIENT_SECRET }}";
           export const API_PROXY_URL = "${{ secrets.API_PROXY_URL }}";
+          export const LOGIN_ENABLED = false;
           EOF
 
       - uses: actions/configure-pages@v5

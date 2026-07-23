@@ -43,6 +43,8 @@ Two separate flows, for two separate purposes:
 
 Credentials live in `js/config.js`, which is gitignored. `js/config.example.js` is the template committed to the repo.
 
+`config.js`'s `LOGIN_ENABLED` flag gates the login button and everything downstream of it (`js/app.js`'s `initAuth`/`hideLoginButton` in `js/ui.js`). It's `true` locally, but the GitHub Actions deploy workflow (`.github/workflows/deploy-pages.yml`) generates the deployed `config.js` with it hardcoded to `false`: Spotify's Development Mode caps this app at a handful of authorized accounts (5, as of February 2026), so the public deployment can't offer real login to arbitrary visitors — only accounts explicitly added in the Spotify Dashboard can log in at all, which would be confusing/broken for everyone else. Extended Quota Mode (which would lift that cap) isn't an option here: since May 2025 it's restricted to organizations with 250k+ MAU, not individual/portfolio projects.
+
 Spotify's February 2026 Dev Mode changes removed the old content-specific library endpoints (`PUT`/`DELETE /me/albums`, `GET /me/albums/contains`) — they now 403 unconditionally regardless of scope. `js/api.js` uses the replacement generic endpoint (`/me/library`, `/me/library/contains`), which is keyed by full Spotify URI (`spotify:album:{id}`) rather than a bare ID; see `albumUri()`.
 
 ## CORS proxy
