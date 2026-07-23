@@ -626,6 +626,16 @@ export function showToast(message, variant = "success") {
 }
 
 /**
+ * Permanently hides the login entry point, for deployments where
+ * `config.js`'s `LOGIN_ENABLED` is `false` because Spotify's Development
+ * Mode caps this app at a handful of authorized accounts and can't offer
+ * real login to arbitrary visitors.
+ */
+export function hideLoginButton() {
+  els.loginButton.hidden = true;
+}
+
+/**
  * Switches the header to its logged-out state: shows the login button,
  * hides the user chip, and closes the profile menu if it was open.
  */

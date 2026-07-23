@@ -16,6 +16,7 @@ import {
 } from "./api.js";
 import { redirectToLogin, handleRedirectCallback, getUserAccessToken, isLoggedIn, logout } from "./auth.js";
 import { getSearchHistory, addToSearchHistory } from "./history.js";
+import { LOGIN_ENABLED } from "./config.js";
 import {
   playIntroAnimation,
   onSearchSubmit,
@@ -40,6 +41,7 @@ import {
   showToast,
   showLoggedIn,
   showLoggedOut,
+  hideLoginButton,
   showLoading,
   showError,
   clearStatus,
@@ -162,7 +164,11 @@ onSaveAlbumClick(async (albumId, button) => {
 });
 
 playIntroAnimation();
-initAuth();
+if (LOGIN_ENABLED) {
+  initAuth();
+} else {
+  hideLoginButton();
+}
 
 /**
  * Runs once on page load: completes a pending PKCE login redirect (if any),
