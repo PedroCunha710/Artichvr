@@ -6,7 +6,11 @@ Personal project built to demonstrate REST API consumption, DOM manipulation, an
 
 ## Demo
 
-> 🔗 _Link to the live version (GitHub Pages / Netlify / Vercel) — add here once published._
+🔗 [pedrocunha710.github.io/Artichvr](https://pedrocunha710.github.io/Artichvr/)
+
+Login and "save to library" are disabled on this deployment — Spotify's Development Mode caps the app at a handful of authorized accounts, so real login can't work for arbitrary visitors. Search and browsing work fully. See `CLAUDE.md`'s "Auth" section for details.
+
+☕ If you enjoyed this project, [buy me a coffee](https://www.buymeacoffee.com/pedrocunha710).
 
 ## Screenshots
 
